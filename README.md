@@ -1,5 +1,3 @@
-# ai-brain-tumor
-
 # GBM Classification from Gene Expression
 
 ## 🔬 Project Overview
