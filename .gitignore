@@ -7,9 +7,11 @@ __pycache__/
 # Ignore Jupyter notebook checkpoints
 .ipynb_checkpoints/
 
-# Ignore alle data files (inclusief raw en processed)
+# Ignore alle data files (inclusief raw en processed), behalve .gitkeep
 data/raw/*
+!data/raw/.gitkeep
 data/processed/*
+!data/processed/.gitkeep
 
 # Ignore environment and OS files
 env/
