@@ -52,14 +52,6 @@ Zie `environment.yml` voor de volledige lijst.
 
 ---
 
-
-## 🚀 Pipeline stappen tot nu toe
-1. `.gct` bestand ingeladen, log2(TPM+1) getransformeerd en als CSV opgeslagen via notebook `01_load_gct.ipynb`.
-2. `.gitignore` toegevoegd zodat data-bestanden niet in versiebeheer komen.
-3. Volgende stap: TCGA-GBM data ophalen en verwerken.
-
----
-
 ## 📌 Notes
 - Clinical labels must be merged manually using GTEx/TCGA metadata.
 - Tumor data from TCGA must be harmonized (gene IDs, format).
