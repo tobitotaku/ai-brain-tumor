@@ -5,46 +5,42 @@
 ## 🔬 Project Overview
 This project builds a machine learning pipeline to classify Glioblastoma Multiforme (GBM) tumor samples versus normal brain tissue using gene expression data.
 
+
 ## 🧬 Data Sources
-- **Normal samples**: GTEx TPM matrix (`gene_tpm_v10_brain_cerebellum.gct`)
-- **Tumor samples**: TCGA-GBM from Genomic Data Commons (GDC)
+- **Normal samples**: GTEx TPM matrix (`gene_tpm_v10_brain_cerebellum.gct`), plaats in `data/raw/` (niet in versiebeheer)
+- **Tumor samples**: TCGA-GBM van Genomic Data Commons (GDC), download en plaats in `data/raw/` (niet in versiebeheer)
+
 
 ## 📁 Project Structure
 ```
-/data/
-  raw/              # Original data files (.gct, .csv)
-  processed/        # Cleaned, normalized data
-  splits/           # Train/test splits
-/notebooks/         # Jupyter notebooks for each stage
-/scripts/           # Python scripts (preprocessing, modeling, etc.)
-/results/           # Plots, metrics, and selected genes
-/models/            # Saved model objects
-```  
+data/
+  raw/              # Original data files (.gct, .csv) (niet in git)
+  processed/        # Cleaned, normalized data (niet in git)
+notebooks/          # Jupyter notebooks voor elke stap
+scripts/            # Python scripts (preprocessing, modeling, etc.)
+results/            # Plots, metrics, and selected genes
+models/             # Saved model objects
+```
+
 
 ## 📦 Environment Setup
-Use the following Conda environment for reproducibility:
+Clone deze repository en maak de Conda-omgeving aan met:
 
-```yaml
-name: gbm-classifier
-dependencies:
-  - python=3.10
-  - pandas
-  - numpy
-  - scikit-learn
-  - matplotlib
-  - seaborn
-  - statsmodels
-  - jupyterlab
-  - umap-learn
-  - openpyxl
-  - pycombat
-```
-
-Save this as `environment.yml` and create your environment:
 ```bash
 conda env create -f environment.yml
-conda activate gbm-classifier
+conda activate gbm-classificatie
 ```
+
+De belangrijkste packages zijn:
+- python=3.10
+- pandas
+- numpy
+- scikit-learn
+- matplotlib
+- jupyter
+- pycombat
+
+Zie `environment.yml` voor de volledige lijst.
 
 ## 🚀 Workflow
 1. Load and clean data
@@ -56,40 +52,11 @@ conda activate gbm-classifier
 
 ---
 
-## 📓 Starter Notebook: 01_load_gct.ipynb
 
-```python
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Load GCT file (GTEx normal brain expression)
-gct_file = '../data/raw/gene_tpm_v10_brain_cerebellum.gct'
-with open(gct_file) as f:
-    _ = [next(f) for _ in range(2)]  # Skip 2 metadata lines
-
-# Read as TSV from line 3 onward
-df = pd.read_csv(gct_file, sep='\t', skiprows=2)
-
-# Preview
-df.head()
-
-# Basic stats
-print(f"Number of genes: {df.shape[0]}")
-print(f"Number of samples: {df.shape[1] - 2}")
-
-# Plot TPM distribution
-sample_cols = df.columns[2:]
-df_log = df[sample_cols].apply(lambda x: np.log2(x + 1))
-plt.figure(figsize=(10,5))
-sns.boxplot(data=df_log, orient='h', fliersize=0.5)
-plt.title('TPM Distribution (log2 transformed)')
-plt.xlabel('log2(TPM + 1)')
-plt.show()
-
-# Save cleaned version
-df.to_csv('../data/processed/brain_normal_tpm.csv', index=False)
-```
+## 🚀 Pipeline stappen tot nu toe
+1. `.gct` bestand ingeladen, log2(TPM+1) getransformeerd en als CSV opgeslagen via notebook `01_load_gct.ipynb`.
+2. `.gitignore` toegevoegd zodat data-bestanden niet in versiebeheer komen.
+3. Volgende stap: TCGA-GBM data ophalen en verwerken.
 
 ---
 

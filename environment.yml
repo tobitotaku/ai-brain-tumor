@@ -1,0 +1,14 @@
+name: gbm-classificatie
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - scikit-learn
+  - matplotlib
+  - pandas
+  - numpy
+  - jupyter
+  - pip
+  - pip:
+      - pycombat

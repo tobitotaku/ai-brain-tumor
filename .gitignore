@@ -1,0 +1,20 @@
+# Ignore Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore alle data files (inclusief raw en processed)
+data/raw/*
+data/processed/*
+
+# Ignore environment and OS files
+env/
+.venv/
+.DS_Store
+
+# Ignore VSCode settings
+.vscode/
