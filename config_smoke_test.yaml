@@ -1,0 +1,109 @@
+# Smoke Test Configuration - Integration Check
+# Hogeschool Rotterdam - Minor AI in Healthcare
+# Retake Project - Quick validation run
+
+# General settings
+random_state: 42
+project_name: "GBM_Classification_SmokeTest"
+verbose: true
+
+# Cross-validation configuration
+cv:
+  outer_folds: 3  # Quick test
+  inner_folds: 3  # Sufficient for smoke test
+  stratified: true
+  shuffle: true
+  test_size: 0.2  # 20% hold-out test set
+
+# Preprocessing settings
+preprocessing:
+  batch_correction: "combat"
+  scaler: "standard"
+  remove_low_variance: true
+  variance_threshold: 0.01
+  correlation_threshold: 0.95
+
+# Feature selection routes - PCA ONLY for smoke test
+features:
+  routes:
+    - "pca"  # Only PCA for quick validation
+  k_best: 100
+  pca_components: 100  # Moderate components
+  stability_selection:
+    enabled: false
+    n_bootstrap: 100
+    threshold: 0.7
+  bio_panel_path: "metadata/biopanel.csv"
+
+# Model configurations - simplified grids
+models:
+  lr_elasticnet:
+    enabled: true
+    param_grid:
+      classifier__C: [0.1, 1.0]
+      classifier__l1_ratio: [0.5]
+      classifier__max_iter: [2000]
+  
+  random_forest:
+    enabled: true
+    param_grid:
+      classifier__n_estimators: [100]
+      classifier__max_depth: [20, null]
+      classifier__min_samples_split: [5]
+      classifier__min_samples_leaf: [2]
+      classifier__class_weight: ["balanced"]
+  
+  lightgbm:
+    enabled: false  # Skip for smoke test
+
+# Evaluation settings
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "roc_auc"
+    - "pr_auc"  # Required: PR-AUC
+  calibration:
+    enabled: true  # Required: calibration check
+    n_bins: 10
+    method: "isotonic"  # Platt or isotonic
+  decision_curve:
+    enabled: true
+    threshold_range: [0.0, 1.0]
+    n_thresholds: 100
+  bootstrap_ci:
+    enabled: true
+    n_bootstrap: 1000
+    confidence: 0.95
+
+# SHAP settings
+shap:
+  enabled: false  # Skip for smoke test
+  n_samples: 100
+  plots:
+    - "beeswarm"
+    - "bar"
+  top_features: 20
+
+# Paths
+paths:
+  raw: "data/raw"
+  interim: "data/interim"
+  processed: "data/processed"
+  metadata: "metadata"
+  figures: "figures"
+  reports: "reports"
+  notebooks: "notebooks"
+  src: "src"
+  scripts: "scripts"
+
+# Output settings
+output:
+  save_models: true
+  save_predictions: true
+  save_probabilities: true
+  figure_format: "png"
+  figure_dpi: 300
+  table_format: "csv"
