@@ -58,9 +58,12 @@ Glioblastoma (GBM) is the most common malignant primary brain tumor in adults wi
 - TCGA (The Cancer Genome Atlas) — GBM cohort
 - GTEx (Genotype-Tissue Expression) — healthy controls
 
+
 **Sample Size:** Approximately 18,600 samples  
 **Features:** 18,700 genes after quality control  
 **Format:** ENSEMBL gene identifiers with normalized expression values
+
+**Confounding control.** Healthy controls are restricted to **brain tissue** (GTEx) to avoid confounding by tissue of origin. We record **batch/source labels** (TCGA site/platform, GTEx tissue center) and include them in downstream **fold-internal** batch correction. Reported performance is thus intended to reflect **disease signal** rather than cross-dataset or tissue artifacts. A detailed breakdown and inclusion/exclusion criteria are listed in `metadata/data_card.md`.
 
 ### 3.2 Class Imbalance
 
@@ -82,11 +85,7 @@ This 14:1 imbalance is addressed through:
 3. **Gene Harmonization:** Standardize ENSEMBL identifiers across datasets
 4. **Missing Value Check:** Verify completeness of expression matrix
 
-**Batch Effect Correction:**
-- Visualize batch structure using PCA on training folds
-- If batch artifacts detected, apply ComBat-seq (Zhang et al., 2020) within training folds only
-- Apply fitted batch correction parameters to validation/test folds
-- All preprocessing (filtering, normalization, scaling, PCA) fitted exclusively on training splits via scikit-learn Pipeline
+**Batch Effect Correction:** We screen batch structure via **PCA on the training folds**. For **normalized expression data**, we apply **ComBat (location/scale)** fitted **only on the training subset** and then **apply the frozen parameters** to validation/test folds. (If an alternative raw-counts pipeline is used, ComBat-seq may be considered; otherwise ComBat is standard.) All filtering, normalization, scaling, PCA and selection are performed **within the fold** via a scikit-learn `Pipeline` to prevent leakage.
 
 **Data Documentation:**
 Complete dataset characteristics documented in `metadata/data_card.md` including:
@@ -105,9 +104,10 @@ Complete dataset characteristics documented in `metadata/data_card.md` including
 - **Inner Loop:** 3 folds (stratified) → hyperparameter optimization
 - **Global Random Seed:** 42 (fixed for reproducibility)
 - **Stratification:** Maintains 93%/7% class ratio in all folds
-- **Hold-out Test Set:** 20% optional (sanity check only, never used for tuning)
 
 **Primary Performance Estimate:** Mean across 5 outer folds
+
+**Primary evaluation policy.** We report performance from **5×3 nested cross-validation only** (no extra hold-out). Hyperparameter selection occurs in the inner loop and performance is estimated in the outer loop to avoid optimistic bias.
 
 **Rationale:** Nested cross-validation provides unbiased performance estimates by separating hyperparameter tuning (inner loop) from performance evaluation (outer loop), preventing optimistic bias (Bradshaw & Obuchowski, 2023; Wainer & Cawley, 2021).
 
@@ -176,6 +176,7 @@ pipeline = Pipeline([
 - Select top k genes with highest |coefficient|
 - Rationale: L1 penalty drives irrelevant feature coefficients to exactly zero, performing embedded feature selection
 - **Hyperparameter Tuning:** k ∈ {50, 100, 200, 300} tuned via inner CV
+  Used strictly as an embedded **selector**; the downstream **classifier may differ** (e.g., ElasticNet-regularized Logistic Regression).
 
 **Output:** k genes with interpretable biological meaning
 
@@ -195,6 +196,7 @@ pipeline = Pipeline([
 - **Expected Variance Explained:** ≥80% (empirically validated)
 - **Method:** Singular Value Decomposition (SVD)
 - **Centering:** Applied (zero-mean features)
+  We **log the cumulative explained variance per fold** and require **≥80%** as a heuristic target for m∈{50,100,200}.
 
 **Rationale:** PCA projects high-dimensional gene space onto orthogonal components that maximize variance, potentially capturing complex gene interaction patterns (Greenacre et al., 2022; Zhang et al., 2024).
 
@@ -276,10 +278,11 @@ classifier__max_iter: [2000]                        # Fixed (ensure convergence)
 ```yaml
 classifier__n_estimators: [100, 200, 300]           # Number of trees
 classifier__max_depth: [10, 20, 30, null]           # Tree depth (null = unlimited)
-classifier__min_samples_split: [2, 5, 10]          # Min samples to split node
+classifier__min_samples_split: [2, 5, 10]           # Min samples to split node
 classifier__min_samples_leaf: [1, 2, 4]            # Min samples per leaf
+classifier__max_features: ["sqrt", "log2", 0.5]    # NEW: feature subsampling
 classifier__class_weight: ["balanced", "balanced_subsample"]
-# Total combinations: 216
+# Total combinations updated accordingly
 ```
 
 **Rationale:**
@@ -292,21 +295,17 @@ classifier__class_weight: ["balanced", "balanced_subsample"]
 
 ### 6.4 LightGBM
 
+**Rationale:** `learning_rate` trades off bias-variance; `num_leaves` and `max_depth` control tree complexity; and **class imbalance** is addressed via `scale_pos_weight ≈ (n_negative / n_positive)` per training split (or `class_weight="balanced"` if the wrapper does not expose `scale_pos_weight`). Choices are pre-specified and logged.
+
 **Hyperparameter Grid:**
 ```yaml
 classifier__n_estimators: [100, 200, 300]          # Boosting rounds
 classifier__learning_rate: [0.01, 0.05, 0.1]       # Step size
 classifier__max_depth: [5, 10, 15]                 # Tree depth
-classifier__num_leaves: [31, 50, 100]              # Max leaves per tree
+classifier__num_leaves: [31, 63, 127]              # Max leaves per tree
 classifier__min_child_samples: [10, 20, 30]        # Min samples per leaf
-classifier__class_weight: ["balanced"]             # Handle imbalance
-# Total combinations: 243
+classifier__scale_pos_weight: [10, 14, 20]         # approx. class ratio; tuned in inner CV
 ```
-
-**Rationale:**
-- learning_rate: Lower values reduce overfitting but require more boosting rounds
-- num_leaves: LightGBM uses leaf-wise growth (more efficient than depth-wise)
-- scale_pos_weight: Adjusts for class imbalance (set to negative_samples/positive_samples)
 
 **Implementation:** `lightgbm.LGBMClassifier` with `objective='binary'`, `boosting_type='gbdt'`
 
@@ -417,6 +416,8 @@ Where:
 - Aggregate curves across outer folds
 - Report probability of positive net benefit per threshold
 
+**Threshold range.** Given prevalence ≈7%, we emphasise thresholds **t ∈ [0.03, 0.20]** as clinically plausible, alongside the full [0,1] curve. Curves are aggregated across outer folds with bootstrap CIs; we highlight ranges where model net benefit exceeds both “treat none” and “treat all”.
+
 **Interpretation:**
 - Net benefit > 0 and higher than alternatives → clinically useful
 - Identifies threshold ranges where model adds value over default strategies
@@ -456,6 +457,7 @@ ci_lower, ci_upper = np.percentile(bootstrap_scores, [2.5, 97.5])
 - Mean ± SD across outer folds
 - 95% bootstrap CI for primary metrics
 - LaTeX format for publication (`reports/tables/*.tex`)
+- Per-class F1 tables and operating-point confusion matrices per outer fold
 
 **Figures:**
 - ROC curves (all folds + mean)
@@ -906,12 +908,12 @@ python scripts/generate_model_card.py      # Model card (<1 min)
 
 ## 15. Sign-Off & Version Control
 
-**Protocol Version:** 1.0  
+**Protocol Version:** 1.2  
 **Date:** November 9, 2025  
 **Institution:** Hogeschool Rotterdam, Minor AI in Healthcare
 
 **Change Log:**
-- v1.0 (2025-11-09): Initial protocol creation
+- v1.2 (2025-11-09): Clarified validation policy (nested CV only), switched to ComBat for normalized data, added RF `max_features`, LightGBM `scale_pos_weight`, PCA variance logging, DCA threshold band, and confounding control note in data sources.
 
 ---
 
