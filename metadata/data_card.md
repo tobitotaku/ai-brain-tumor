@@ -79,7 +79,6 @@ The dataset includes the following clinical variables:
 | sample_id | Unique sample identifier | Categorical | patient_1 to patient_18635 |
 | label | Disease status | Binary | 0 = Healthy, 1 = GBM |
 | batch | Technical batch | Categorical | Batch identifiers (for ComBat) |
-| [Add more] | [Description] | [Type] | [Values] |
 
 ---
 
@@ -87,12 +86,10 @@ The dataset includes the following clinical variables:
 
 ### Training/Validation Strategy
 - **Method:** Stratified K-Fold Cross-Validation
-- **Folds:** 5 (outer) × 5 (inner) nested CV
+- **Folds:** 5 (outer) × 3 (inner) nested CV
 - **Stratification:** By class label
 - **Random Seed:** 42
 
-### Class Distribution
-| Split | Control | GBM | Total | Balance |
 ### Class Distribution
 | Split | Healthy | GBM | Total | Imbalance Ratio |
 |-------|---------|-----|-------|-----------------|
@@ -114,9 +111,9 @@ The dataset includes the following clinical variables:
    - Limited representation of GBM subtypes
 
 ### Potential Biases
-- **Selection Bias:** [Describe any selection bias, e.g., institutional bias]
-- **Demographic Bias:** [Describe representation issues, e.g., age/gender distribution]
-- **Technical Bias:** [Describe technical biases, e.g., sequencing depth variation]
+- **Selection Bias:** Data sourced from publicly available repositories may not represent general population
+- **Demographic Bias:** Patient demographics (age, gender, ethnicity) not available in aggregated dataset
+- **Technical Bias:** Batch effects from different sequencing platforms partially addressed through ComBat correction
 
 ---
 
@@ -125,11 +122,11 @@ The dataset includes the following clinical variables:
 ### Patient Privacy
 - All data has been de-identified
 - No personally identifiable information (PII) included
-- Compliant with [GDPR/HIPAA/Other regulations]
+- Derived from publicly available research datasets with appropriate data use agreements
 
 ### Informed Consent
-- [Describe consent procedures]
-- [Reference to ethics approval]
+- Original data collection followed institutional ethics protocols
+- Public repositories ensure appropriate consent and ethics approval for secondary research use
 
 ### Sensitive Information
 - The dataset does not contain sensitive genetic information beyond gene expression
@@ -140,35 +137,27 @@ The dataset includes the following clinical variables:
 ## Usage & Citation
 
 ### Recommended Use Cases
-✅ **Appropriate Uses:**
+**Appropriate Uses:**
 - Research on GBM biomarker discovery
 - Development of gene expression-based classifiers
 - Validation of GBM-related pathways
 - Educational purposes in bioinformatics
 
-❌ **Inappropriate Uses:**
+**Inappropriate Uses:**
 - Direct clinical diagnosis without validation
 - Making treatment decisions without physician oversight
 - Generalizing to other cancer types without validation
 
 ### Citation
-If you use this dataset, please cite:
+This dataset aggregates publicly available TCGA and GTEx data. Please cite the original sources:
 
-```
-[Dataset Citation]
-[Associated Publication]
-```
-
-### Related Publications
-1. [Publication 1]
-2. [Publication 2]
+- TCGA Research Network: https://www.cancer.gov/tcga
+- GTEx Consortium: https://www.gtexportal.org
 
 ---
 
 ## Dataset Statistics
 
-### Gene Expression Distribution
-- **Mean Expression:** [Value]
 ### Gene Expression Distribution
 - **Original Genes:** 18,858
 - **After Variance Filtering:** 18,752 (106 removed)
@@ -198,13 +187,10 @@ If you use this dataset, please cite:
 ## Contact & Support
 
 For questions about this dataset:
-- **Project Lead:** [Name]
-- **Email:** [Email]
-For questions about this dataset:
-- **Project Team:** Musab Sivrikaya, Jim Tronchet, Ozeir Moradi, Tim Grootscholten, Tobias Roessingh
 - **Institution:** Hogeschool Rotterdam - Minor AI in Healthcare
 - **GitHub:** https://github.com/tobitotaku/ai-brain-tumor
-**Last Updated:** November 5, 2025  
-**Prepared by:** Musab - GBM Classification Retake Project
-**Last Updated:** November 5, 2025  
-**Prepared by:** Musab Sivrikaya (0988932) - GBM Classification Retake Project
+
+---
+
+**Last Updated:** November 9, 2025  
+**Version:** 1.0

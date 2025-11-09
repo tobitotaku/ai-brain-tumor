@@ -17,40 +17,40 @@ This is a machine learning model for binary classification of Glioblastoma (GBM)
 - **Features:** 200 genes (filter_l1) or 200 PCA components
 
 ### Pipeline Components
-1. **Feature Selection:** [Method used]
+1. **Feature Selection:**
    - Variance filtering (threshold: 0.01)
    - Correlation filtering (threshold: 0.95)
-   - [L1 regularization / PCA / Biological panel]
+   - L1 regularization or PCA dimensionality reduction
 
-2. **Batch Correction:** ComBat/Harmony
+2. **Batch Correction:** ComBat
    - Applied only on training folds (no leakage)
 
-3. **Scaling:** StandardScaler/RobustScaler
+3. **Scaling:** StandardScaler
    - Fitted on training data only
 
-4. **Classifier:** [Model type]
-   - Hyperparameters: [Best parameters from CV]
+4. **Classifier:** Multiple models compared (Logistic Regression, Random Forest, LightGBM)
+   - Hyperparameters optimized via nested cross-validation
 
 ---
 
 ## Intended Use
 
 ### Primary Intended Uses
-✅ **Appropriate Uses:**
+**Appropriate Uses:**
 - Research tool for GBM biomarker discovery
 - Exploratory analysis of gene expression patterns
 - Educational demonstration of ML in healthcare
 - Hypothesis generation for further clinical validation
 
 ### Out-of-Scope Uses
-❌ **Inappropriate Uses:**
+**Inappropriate Uses:**
 - **Direct clinical diagnosis** - Model has not been clinically validated
 - **Treatment decisions** - Not approved for clinical decision-making
 - **Standalone screening tool** - Requires physician interpretation
 - **Application to other cancer types** - Trained specifically for GBM
 
 ### User Warnings
-⚠️ **Important Limitations:**
+**Important Limitations:**
 - This model is a research prototype and has NOT been approved for clinical use
 - Predictions should be interpreted by qualified healthcare professionals
 - Model performance may vary on external datasets
@@ -89,19 +89,19 @@ Performance on held-out cross-validation folds:
 
 | Metric | Value | 95% CI |
 |--------|-------|--------|
-| ROC-AUC | [X.XXX] | ([X.XXX] - [X.XXX]) |
-| PR-AUC | [X.XXX] | ([X.XXX] - [X.XXX]) |
-| F1-Score | [X.XXX] | - |
-| Accuracy | [X.XXX] | - |
-| Precision | [X.XXX] | - |
-| Recall | [X.XXX] | - |
-| Specificity | [X.XXX] | - |
+| ROC-AUC | TBD | TBD |
+| PR-AUC | TBD | TBD |
+| F1-Score | TBD | TBD |
+| Accuracy | TBD | TBD |
+| Precision | TBD | TBD |
+| Recall | TBD | TBD |
+| Specificity | TBD | TBD |
 
-*Note: Values to be filled after model training*
+**Note:** Values to be populated after model training completion
 
 ### Calibration
-- **Brier Score:** [Value]
-- **Expected Calibration Error (ECE):** [Value]
+- **Brier Score:** TBD
+- **Expected Calibration Error (ECE):** TBD
 - Model calibration assessed via reliability diagrams
 - See `figures/calibration/` for calibration curves
 
@@ -116,11 +116,7 @@ Performance on held-out cross-validation folds:
 ### Feature Importance
 Top 10 most important features (by SHAP values):
 
-1. [Gene 1] - Mean |SHAP|: [Value]
-2. [Gene 2] - Mean |SHAP|: [Value]
-3. [Gene 3] - Mean |SHAP|: [Value]
-...
-10. [Gene 10] - Mean |SHAP|: [Value]
+**Note:** Feature rankings to be populated after SHAP analysis completion
 
 *Full feature importance available in `reports/tables/shap_summary.csv`*
 
@@ -133,7 +129,7 @@ Top 10 most important features (by SHAP values):
   - Dependence plots (feature interactions)
 
 ### Biological Interpretation
-[Describe biological relevance of top features]
+Biological relevance of identified features will be assessed through:
 - Association with known GBM pathways
 - Literature support for identified biomarkers
 - Potential therapeutic targets
@@ -167,12 +163,12 @@ Top 10 most important features (by SHAP values):
 ### Known Biases
 
 1. **Data Bias:**
-   - [Describe demographic representation issues if any]
-   - [Describe institutional or technical biases]
-   - Class imbalance may favor majority class
+   - Training data sourced from TCGA and GTEx repositories
+   - May not represent diverse patient demographics
+   - Class imbalance (93.3% healthy, 6.7% GBM) may favor majority class
 
 2. **Selection Bias:**
-   - Training data from [specific sources]
+   - Training data from specific research cohorts
    - May not represent general GBM population
 
 3. **Measurement Bias:**
@@ -191,7 +187,7 @@ Model may perform poorly when:
 ## Ethical Considerations
 
 ### Fairness & Equity
-- **Demographic Analysis:** [Describe if performance varies by demographics]
+- **Demographic Analysis:** Patient demographics not available in aggregated dataset
 - **Access:** Model predictions should not determine access to care
 - **Bias Mitigation:** Batch correction applied to reduce technical bias
 
@@ -201,7 +197,7 @@ Model may perform poorly when:
 - Predictions should be handled according to healthcare privacy regulations
 
 ### Clinical Impact
-⚠️ **Critical Warnings:**
+**Critical Warnings:**
 - **NOT approved for clinical diagnosis**
 - **NOT a substitute for physician judgment**
 - **NOT validated for treatment selection**
@@ -251,13 +247,6 @@ All hyperparameters and settings stored in `config.yaml`
 
 ## Model Card Authors & Contact
 
-**Authors:**
-- Musab Sivrikaya
-- Jim Tronchet
-- Ozeir Moradi
-- Tim Grootscholten
-- Tobias Roessingh
-
 **Affiliation:**
 - Hogeschool Rotterdam
 - Minor: AI in Healthcare
@@ -267,7 +256,7 @@ All hyperparameters and settings stored in `config.yaml`
 - GitHub: https://github.com/tobitotaku/ai-brain-tumor
 
 **Reviewers:**
-- Hogeschool Rotterdam teachers (Minor AI in Healthcare)
+- Hogeschool Rotterdam faculty (Minor AI in Healthcare)
 
 ---
 
@@ -290,21 +279,20 @@ Planned enhancements:
 
 ## References & Citations
 
-### Associated Publications
-[List publications using or describing this model]
-
 ### Citation
-If you use this model, please cite:
+If you use this model, please reference:
 
 ```
-[Musab et al., GBM Gene Expression Classifier,
-Hogeschool Rotterdam, 2025]
+GBM Gene Expression Classifier
+Hogeschool Rotterdam Minor AI in Healthcare, 2025
+GitHub: https://github.com/tobitotaku/ai-brain-tumor
 ```
 
 ### Related Work
-1. [Relevant GBM classification papers]
-2. [Relevant ML in oncology papers]
-3. [Relevant explainability papers]
+See `docs/Protocol.md` for complete literature references on:
+- GBM classification using gene expression
+- Machine learning in oncology
+- Model explainability and interpretability
 
 ---
 
@@ -319,6 +307,5 @@ Hogeschool Rotterdam, 2025]
 ---
 
 **Model Card Version:** 1.0  
-**Last Updated:** November 5, 2025  
-**Status:** Research Prototype - Not for Clinical Use  
-**Prepared by:** Musab 0988932
+**Last Updated:** November 9, 2025  
+**Status:** Research Prototype - Not for Clinical Use
