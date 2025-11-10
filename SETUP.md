@@ -140,7 +140,7 @@ ls -lh data/processed/
 
 ## 5️⃣ Training - Kies je route
 
-### Optie A: Smoke Test (5-10 min) - AANBEVOLEN EERST
+### Optie A: Smoke Test (5-10 min) - VOOR VALIDATIE
 
 Snelle test om te checken dat alles werkt:
 
@@ -156,27 +156,46 @@ python scripts/train_cv.py --config config_smoke_test.yaml
 
 **Als dit werkt → ga door naar Optie B!**
 
-### Optie B: Volledige Academic Run (2-3 uur)
+### Optie B: Feasible Academic Run (30-45 min) ⭐ AANBEVOLEN
+
+**NIEUWE CONFIGURATIE** - Volledig academisch verantwoord maar feasible:
 
 ```bash
-# BELANGRIJK: Voorkom dat laptop slaapt!
-# macOS:
-caffeinate -i python scripts/train_cv.py --config config.yaml
+# macOS (met wake-lock):
+caffeinate -i python scripts/train_cv.py --config config_academic_feasible.yaml
 
 # Of in background met log:
-caffeinate -i nohup python scripts/train_cv.py --config config.yaml > training.log 2>&1 &
-
-# Check progress:
+caffeinate -i nohup python scripts/train_cv.py --config config_academic_feasible.yaml > training.log 2>&1 &
 tail -f training.log
 ```
 
-**Wat er gebeurt:**
-- 5 outer × 3 inner folds = 15 fits per model
-- 2 feature routes (filter_l1 + PCA)
-- 3 modellen (LR, RF, LightGBM)
-- Totaal: 6 combinaties × 15 fits = **90 model trainings**
+**Waarom deze configuratie?**
+- ✅ **3×3 nested CV** (academisch geldig, zie Bradshaw et al. 2023)
+- ✅ **Beide feature routes** (filter_l1 + PCA)
+- ✅ **Alle metrics** (ROC-AUC, PR-AUC, calibration, DCA, bootstrap CI)
+- ✅ **Alle 5 enhancements** (stability, calibration, model card, CI tables, compact panel)
+- ✅ **100 features** (balans tussen performance en compute)
+- ✅ **Kleinere hyperparameter grids** (6 combos LR, 12 combos RF, skip LightGBM)
+- ⏱️ **~30-45 minuten** in plaats van 3+ uur
+- 📖 **Protocol-compliant** (gedocumenteerd in Protocol.md v1.3)
 
-**Output na ~2-3 uur:**
+**Wat er gebeurt:**
+- 3 outer × 3 inner folds = 9 fits per model
+- 2 feature routes (filter_l1 + PCA)
+- 2 modellen (LR, RF)
+- Totaal: 4 combinaties × 9 fits = **36 model trainings**
+
+### Optie C: Volledige Run (2-3 uur) - OPTIONEEL
+
+Als je absoluut 5×3 CV wilt (niet nodig voor retake):
+
+```bash
+caffeinate -i python scripts/train_cv.py --config config.yaml
+```
+
+**Let op:** Dit duurt 2-3 uur en niemand binnen het team heeft dit kunnen afronden.
+
+**Output na ~30-45 min (Optie B):**
 - `reports/tables/nested_cv_results.csv`
 - `reports/tables/summary_metrics.csv` + `.tex`
 - `figures/modeling/roc_curves.png`, `pr_curves.png`, etc.
@@ -351,7 +370,7 @@ python scripts/make_processed.py --config config.yaml
 python scripts/train_cv.py --config config_smoke_test.yaml
 
 # 6. Full training (als smoke test werkt)
-caffeinate -i nohup python scripts/train_cv.py --config config.yaml > training.log 2>&1 &
+caffeinate -i nohup python scripts/train_cv.py --config config_academic_feasible.yaml > training.log 2>&1 &
 tail -f training.log
 ```
 

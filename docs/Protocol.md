@@ -99,21 +99,28 @@ Complete dataset characteristics documented in `metadata/data_card.md` including
 
 ### 4.1 Nested Cross-Validation Design
 
-**Configuration:**
+**Standard Configuration (`config.yaml`):**
 - **Outer Loop:** 5 folds (stratified) → unbiased performance estimation
 - **Inner Loop:** 3 folds (stratified) → hyperparameter optimization
 - **Global Random Seed:** 42 (fixed for reproducibility)
 - **Stratification:** Maintains 93%/7% class ratio in all folds
 
-**Primary Performance Estimate:** Mean across 5 outer folds
+**Feasibility Configuration (`config_academic_feasible.yaml`):**
+- **Outer Loop:** 3 folds (stratified) → computationally feasible variant
+- **Inner Loop:** 3 folds (stratified) → hyperparameter optimization
+- **Global Random Seed:** 42 (fixed for reproducibility)
+- **Stratification:** Maintains 93%/7% class ratio in all folds
+- **Justification:** 3-5 outer folds provide sufficient performance estimation (Bradshaw et al., 2023); 3×3 nested CV maintains academic rigor while enabling completion within retake timeline
 
-**Primary evaluation policy.** We report performance from **5×3 nested cross-validation only** (no extra hold-out). Hyperparameter selection occurs in the inner loop and performance is estimated in the outer loop to avoid optimistic bias.
+**Primary Performance Estimate:** Mean across outer folds (5 or 3 depending on configuration)
 
-**Rationale:** Nested cross-validation provides unbiased performance estimates by separating hyperparameter tuning (inner loop) from performance evaluation (outer loop), preventing optimistic bias (Bradshaw & Obuchowski, 2023; Wainer & Cawley, 2021).
+**Primary evaluation policy.** We report performance from **nested cross-validation only** (no extra hold-out). Hyperparameter selection occurs in the inner loop and performance is estimated in the outer loop to avoid optimistic bias.
+
+**Rationale:** Nested cross-validation provides unbiased performance estimates by separating hyperparameter tuning (inner loop) from performance evaluation (outer loop), preventing optimistic bias (Bradshaw & Obuchowski, 2023; Wainer & Cawley, 2021). The 3-fold variant maintains methodological soundness while addressing computational constraints typical in educational and resource-limited settings.
 
 **Total Model Fits per Configuration:**
-- 5 outer folds × 3 inner folds × N hyperparameter combinations
-- Total across all configurations: ~90-150 model training runs
+- Standard (5×3): 5 outer folds × 3 inner folds × N hyperparameter combinations (~90-150 fits)
+- Feasible (3×3): 3 outer folds × 3 inner folds × N hyperparameter combinations (~54-90 fits)
 
 ### 4.2 Data Leakage Prevention
 
@@ -908,11 +915,12 @@ python scripts/generate_model_card.py      # Model card (<1 min)
 
 ## 15. Sign-Off & Version Control
 
-**Protocol Version:** 1.2  
-**Date:** November 9, 2025  
+**Protocol Version:** 1.3  
+**Date:** November 10, 2025  
 **Institution:** Hogeschool Rotterdam, Minor AI in Healthcare
 
 **Change Log:**
+- v1.3 (2025-11-10): Added computationally feasible configuration variant (3×3 nested CV) with academic justification. Maintains all core requirements while enabling completion within retake timeline.
 - v1.2 (2025-11-09): Clarified validation policy (nested CV only), switched to ComBat for normalized data, added RF `max_features`, LightGBM `scale_pos_weight`, PCA variance logging, DCA threshold band, and confounding control note in data sources.
 
 ---

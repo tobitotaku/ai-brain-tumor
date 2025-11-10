@@ -9,7 +9,7 @@
 This project implements a comprehensive, production-ready machine learning pipeline for **Glioblastoma (GBM) classification** using gene expression data. Developed for the **Minor AI in Healthcare** at Hogeschool Rotterdam (Capstone Project - Retake), this work demonstrates best practices in:
 
 - **Leak-free preprocessing** with proper fit/transform separation
-- **Nested cross-validation (5×3)** for unbiased performance estimation  
+- **Nested cross-validation (3×3 or 5×3)** for unbiased performance estimation  
 - **Multiple feature selection strategies** (filter+L1, PCA)
 - **Model comparison** (Logistic Regression, Random Forest, LightGBM)
 - **Comprehensive evaluation** (ROC-AUC, PR-AUC, calibration, decision curves)
@@ -19,7 +19,28 @@ This project implements a comprehensive, production-ready machine learning pipel
 - **Full reproducibility** via configuration management and random seed control
 
 **Research Protocol:** See `docs/Protocol.md` for complete academic documentation  
-**Training Status:** See `TRAINING_STATUS.md` for current progress and results
+**Training Status:** See `TRAINING_STATUS.md` for current progress and results  
+**⭐ NEW:** See `FEASIBILITY_SOLUTION.md` for computationally feasible academic configuration
+
+---
+
+## ⚡ Computationally Feasible Configuration (NEW)
+
+**Problem:** Original 5×3 nested CV training takes 2-3 hours and cannot be completed by team members.
+
+**Solution:** `config_academic_feasible.yaml` - A protocol-compliant configuration that:
+- ✅ Maintains **full academic rigor** (nested CV, both feature routes, all metrics)
+- ✅ Runs in **30-45 minutes** instead of 2-3 hours
+- ✅ Documented in **Protocol v1.3** with literature support
+- ✅ Includes all **5 academic enhancements**
+
+**Key Changes:**
+- 3×3 nested CV (academically valid per Bradshaw et al. 2023)
+- 100 features instead of 200 (core genes preserved)
+- Focused hyperparameter grids (6 LR combos, 12 RF combos)
+- LightGBM disabled (Random Forest covers tree-based models)
+
+**See `FEASIBILITY_SOLUTION.md` for complete explanation and academic defense.**
 
 ---
 
@@ -162,7 +183,27 @@ python scripts/train_cv.py --config config_smoke_test.yaml
 ```
 This runs 3×3 CV with PCA only to verify everything works before the full run.
 
-**Step 1: Full Training Run (2-3 hours):**
+**⭐ RECOMMENDED: Feasible Academic Run (30-45 minutes):**
+```bash
+# Use caffeinate on macOS to prevent laptop sleep
+caffeinate -i python scripts/train_cv.py --config config_academic_feasible.yaml
+
+# Alternative: Run in background with logging
+caffeinate -i nohup python scripts/train_cv.py --config config_academic_feasible.yaml > training_feasible.log 2>&1 &
+
+# Monitor progress in real-time
+tail -f training_feasible.log
+```
+
+**What this does:**
+- Nested CV: 3 outer × 3 inner folds (academically valid)
+- Feature routes: filter_l1 (100 genes) + PCA (100 components)
+- Models: Logistic Regression + Random Forest
+- Evaluation: ROC-AUC, PR-AUC, calibration, decision curves, bootstrap CI
+- Runtime: ~30-45 minutes
+- **See `FEASIBILITY_SOLUTION.md` for academic justification**
+
+**Alternative: Full Training Run (2-3 hours - NOT RECOMMENDED):**
 ```bash
 # Use caffeinate on macOS to prevent laptop sleep
 caffeinate -i python scripts/train_cv.py --config config.yaml
