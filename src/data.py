@@ -3,9 +3,6 @@ Data Loading Module
 ===================
 This module handles loading and initial validation of gene expression data
 and associated metadata for GBM classification.
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import pandas as pd

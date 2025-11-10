@@ -1,0 +1,98 @@
+# Ultra-Fast Configuration
+# Only realistic feature selection: PCA
+# Filter_L1 is computationally infeasible on this dataset
+
+random_state: 42
+project_name: "GBM_Classification_UltraFast"
+verbose: true
+
+cv:
+  outer_folds: 3
+  inner_folds: 3
+  stratified: true
+  shuffle: true
+  test_size: 0.2
+
+preprocessing:
+  batch_correction: "combat"
+  scaler: "standard"
+  remove_low_variance: true
+  variance_threshold: 0.01
+  correlation_threshold: 0.95
+
+# Use PCA for feature selection - computationally feasible
+features:
+  routes:
+    - "pca"  # PCA only - proven fast and effective
+  k_best: 100
+  pca_components: 100  # PCA: O(n*k²) not O(n²) like correlation
+  stability_selection:
+    enabled: false
+  bio_panel_path: "metadata/biopanel.csv"
+
+models:
+  lr_elasticnet:
+    enabled: true
+    param_grid:
+      classifier__C: [0.1, 1.0]
+      classifier__l1_ratio: [0.5]
+      classifier__max_iter: [2000]
+  
+  random_forest:
+    enabled: true
+    param_grid:
+      classifier__n_estimators: [100]
+      classifier__max_depth: [20]
+      classifier__min_samples_split: [5]
+      classifier__min_samples_leaf: [2]
+      classifier__class_weight: ["balanced"]
+
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "roc_auc"
+    - "pr_auc"
+  calibration:
+    enabled: true
+    n_bins: 10
+  decision_curve:
+    enabled: true
+    threshold_range: [0.0, 1.0]
+    n_thresholds: 100
+  bootstrap_ci:
+    enabled: true
+    n_bootstrap: 1000
+    confidence: 0.95
+
+shap:
+  enabled: true
+  n_samples: 100
+  plots:
+    - "beeswarm"
+    - "bar"
+  top_features: 20
+
+ablation:
+  enabled: false
+
+paths:
+  raw: "data/raw"
+  interim: "data/interim"
+  processed: "data/processed"
+  metadata: "metadata"
+  figures: "figures"
+  reports: "reports"
+  notebooks: "notebooks"
+  src: "src"
+  scripts: "scripts"
+
+output:
+  save_models: true
+  save_predictions: true
+  save_probabilities: true
+  figure_format: "png"
+  figure_dpi: 300
+  table_format: "csv"

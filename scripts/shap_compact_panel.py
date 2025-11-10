@@ -5,9 +5,6 @@ Performs SHAP analysis on top-N most stable genes from filter_l1 selection.
 
 NOTE: This script requires SHAP, which is incompatible with Python 3.14.
 As a workaround, we use sklearn's feature_importances_ for tree models.
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import numpy as np
@@ -207,7 +204,7 @@ def extract_compact_feature_importance(
 def main():
     """Main execution function."""
     # Load config
-    config_path = Path("config.yaml")
+    config_path = Path("config/config_ultrafast_pca.yaml")
     with open(config_path) as f:
         config = yaml.safe_load(f)
     

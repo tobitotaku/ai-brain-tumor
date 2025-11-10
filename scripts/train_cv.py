@@ -8,8 +8,6 @@ for unbiased performance estimation.
 Usage:
     python scripts/train_cv.py --config config.yaml
 
-Author: Musab 0988932
-Date: November 2025
 """
 
 import sys
@@ -21,6 +19,11 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from tqdm import tqdm
+import os
+
+# Disable joblib memory mapping for this data size (18K+ features causes I/O bottleneck)
+os.environ['JOBLIB_TEMP_FOLDER'] = '/tmp'
+os.environ['JOBLIB_START_METHOD'] = 'spawn'
 
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -47,12 +50,22 @@ from src.plots import (
     plot_decision_curve
 )
 
-# Configure logging
+# Configure enhanced logging with timestamps and real-time visibility
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s | %(levelname)-8s | %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+# Also log to file with timestamp
+log_dir = Path('logs')
+log_dir.mkdir(exist_ok=True)
+log_file = log_dir / f'training_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+fh = logging.FileHandler(log_file)
+fh.setLevel(logging.INFO)
+fh.setFormatter(logging.Formatter('%(asctime)s | %(levelname)-8s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+logger.addHandler(fh)
 
 
 def main(config_path: str):

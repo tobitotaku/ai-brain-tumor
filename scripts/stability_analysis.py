@@ -2,9 +2,6 @@
 Feature Stability Analysis
 ===========================
 Analyzes feature selection stability via bootstrap resampling.
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import numpy as np
@@ -213,7 +210,7 @@ def plot_stability_heatmap(
 def main():
     """Main execution function."""
     # Load config
-    config_path = Path("config.yaml")
+    config_path = Path("config/config_ultrafast_pca.yaml")
     with open(config_path) as f:
         config = yaml.safe_load(f)
     
@@ -227,18 +224,16 @@ def main():
     # Load processed data
     logger.info("Loading processed data...")
     loader = GeneExpressionDataLoader()
-    X, y, metadata = loader.load_data(
-        expression_path="data/processed/expression_processed.csv",
-        metadata_path="data/processed/metadata_processed.csv"
-    )
+    X, metadata = loader.load_data()
+    y = metadata['label']
     
     logger.info(f"Loaded data: {X.shape[0]} samples × {X.shape[1]} genes")
     
     # Get selector parameters from config
     selector_params = {
-        'k_best': config['feature_selection']['filter_l1']['k_best'],
-        'variance_threshold': config['feature_selection']['variance_threshold'],
-        'correlation_threshold': config['feature_selection']['correlation_threshold'],
+        'k_best': config['features']['k_best'],
+        'variance_threshold': config['preprocessing']['variance_threshold'],
+        'correlation_threshold': config['preprocessing'].get('correlation_threshold', 0.95),
         'C': 1.0  # Default for stability analysis
     }
     

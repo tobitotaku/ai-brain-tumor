@@ -3,8 +3,6 @@ Model Card Generator
 ====================
 Auto-generates comprehensive model card from training results.
 
-Author: Musab 0988932
-Date: November 2025
 """
 
 import pandas as pd

@@ -452,7 +452,6 @@ Klaar voor inleveren:
 
 ---
 
-**Laatst geupdate:** 6 november 2025  
-**Door:** Musab Sivrikaya (0988932)
+
 
 **Succes!** 🚀

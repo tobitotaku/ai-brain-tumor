@@ -3,9 +3,6 @@ Evaluation Module
 =================
 This module implements comprehensive evaluation metrics, calibration analysis,
 and decision curve analysis for model assessment.
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import numpy as np

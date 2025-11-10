@@ -4,8 +4,6 @@ Pipeline Orchestration Module
 This module implements the complete machine learning pipeline with
 proper cross-validation and no data leakage.
 
-Author: Musab 0988932
-Date: November 2025
 """
 
 from sklearn.pipeline import Pipeline
@@ -17,6 +15,8 @@ import logging
 import pickle
 from pathlib import Path
 from tqdm import tqdm
+import time
+from datetime import datetime
 
 from .preprocess import BatchCorrector, ExpressionScaler
 from .features import create_feature_selector
@@ -111,6 +111,9 @@ def nested_cross_validation(
     Returns:
         Dictionary with CV results.
     """
+    import time
+    from datetime import datetime
+    
     logger.info(
         f"Starting nested CV: outer={outer_cv}, inner={inner_cv}, "
         f"scoring={scoring}"
@@ -130,7 +133,7 @@ def nested_cross_validation(
         random_state=random_state
     )
 
-    outer_results = {
+    outer_results: Dict[str, Any] = {
         'fold': [],
         'train_score': [],
         'val_score': [],
@@ -149,20 +152,32 @@ def nested_cross_validation(
             leave=True
         )
     ):
-        logger.info(f"Outer fold {fold_idx + 1}/{outer_cv}")
+        fold_start = time.time()
+        logger.info(
+            f"\n\u250c Outer fold {fold_idx + 1}/{outer_cv} | "
+            f"{datetime.now().strftime('%H:%M:%S')}"
+        )
 
         # Split data
         X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
         y_train, y_val = y[train_idx], y[val_idx]
+        
+        logger.info(
+            f"\u2502 Train samples: {len(X_train)}, Val samples: {len(X_val)}"
+        )
 
         # Inner CV: Hyperparameter tuning
+        # Note: Disable joblib memory mapping (max_nbytes=None) to prevent I/O bottleneck
+        # with high-dimensional data (18K+ features)
+        logger.info(f"\u2502 Starting hyperparameter tuning ({inner_cv} folds)...")
+        
         grid_search = GridSearchCV(
             estimator=pipeline,
             param_grid=param_grid,
             cv=inner_cv_splitter,
             scoring=scoring,
-            n_jobs=10,
-            verbose=1,  # Show grid search progress
+            n_jobs=2,  # Reduced to 2 to prevent memory overflow (48GB RAM constraint)
+            verbose=0,  # Reduced verbosity for cleaner logs
             return_train_score=True
         )
 
@@ -174,39 +189,42 @@ def nested_cross_validation(
         # Evaluate on validation fold
         y_pred = best_model.predict(X_val)
         y_prob = best_model.predict_proba(X_val)[:, 1]
+        val_score = best_model.score(X_val, y_val)
 
         # Store results
         outer_results['fold'].append(fold_idx + 1)
         outer_results['train_score'].append(grid_search.best_score_)
-        outer_results['val_score'].append(best_model.score(X_val, y_val))
+        outer_results['val_score'].append(val_score)
         outer_results['best_params'].append(grid_search.best_params_)
         outer_results['y_true'].append(y_val)
         outer_results['y_pred'].append(y_pred)
         outer_results['y_prob'].append(y_prob)
 
+        fold_elapsed = time.time() - fold_start
         logger.info(
-            f"  Best params: {grid_search.best_params_}"
+            f"\u2502 Train score: {grid_search.best_score_:.3f} | "
+            f"Val score: {val_score:.3f} | "
+            f"Elapsed: {fold_elapsed:.1f}s"
         )
         logger.info(
-            f"  Train score: {grid_search.best_score_:.3f}, "
-            f"Val score: {outer_results['val_score'][-1]:.3f}"
+            f"\u2514 Best params: {grid_search.best_params_}"
         )
 
     # Concatenate predictions from all folds
-    outer_results['y_true_all'] = np.concatenate(outer_results['y_true'])
-    outer_results['y_pred_all'] = np.concatenate(outer_results['y_pred'])
-    outer_results['y_prob_all'] = np.concatenate(outer_results['y_prob'])
+    outer_results['y_true_all'] = np.concatenate(outer_results['y_true'])  # type: ignore
+    outer_results['y_pred_all'] = np.concatenate(outer_results['y_pred'])  # type: ignore
+    outer_results['y_prob_all'] = np.concatenate(outer_results['y_prob'])  # type: ignore
 
     # Summary statistics
-    outer_results['mean_train_score'] = np.mean(outer_results['train_score'])
-    outer_results['std_train_score'] = np.std(outer_results['train_score'])
-    outer_results['mean_val_score'] = np.mean(outer_results['val_score'])
-    outer_results['std_val_score'] = np.std(outer_results['val_score'])
+    outer_results['mean_train_score'] = np.mean(outer_results['train_score'])  # type: ignore
+    outer_results['std_train_score'] = np.std(outer_results['train_score'])  # type: ignore
+    outer_results['mean_val_score'] = np.mean(outer_results['val_score'])  # type: ignore
+    outer_results['std_val_score'] = np.std(outer_results['val_score'])  # type: ignore
 
     logger.info(
-        f"Nested CV complete: "
+        f"\n\u2713 Nested CV complete: "
         f"Val score = {outer_results['mean_val_score']:.3f} "
-        f"± {outer_results['std_val_score']:.3f}"
+        f"\u00b1 {outer_results['std_val_score']:.3f}"
     )
 
     return outer_results
@@ -251,7 +269,7 @@ def train_final_model(
         param_grid=param_grid,
         cv=cv_splitter,
         scoring=scoring,
-        n_jobs=10,
+        n_jobs=2,  # Reduced to 2 to prevent memory overflow
         verbose=1,
         return_train_score=True
     )

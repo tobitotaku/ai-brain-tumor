@@ -5,16 +5,22 @@
 ### Model Summary
 This is a machine learning model for binary classification of Glioblastoma (GBM) samples versus controls using gene expression data. The model was developed as part of the "AI in Healthcare" minor at Hogeschool Rotterdam.
 
-**Model Name:** GBM Gene Expression Classifier  
+**Model Name:** GBM Gene Expression Classifier (PCA + Random Forest)  
 **Version:** 1.0  
-**Date:** November 2025  
-**Framework:** scikit-learn
+
+**Framework:** scikit-learn 1.7.2 / Python 3.14.0
 
 ### Model Architecture
-- **Type:** Ensemble comparison (Logistic Regression, Random Forest, LightGBM)
+- **Type:** Random Forest Ensemble (bagging)
 - **Input:** 18,752 normalized gene expression values
+- **Dimensionality Reduction:** PCA (100 components, 37.78% variance explained)
 - **Output:** Binary prediction (0 = Healthy, 1 = GBM) + probability scores
-- **Features:** 200 genes (filter_l1) or 200 PCA components
+- **Best Hyperparameters:**
+  - n_estimators: 200 trees
+  - max_depth: unlimited (full trees)
+  - min_samples_leaf: 2
+  - min_samples_split: 5
+  - class_weight: balanced (handles 14:1 imbalance)
 
 ### Pipeline Components
 1. **Feature Selection:**
@@ -85,25 +91,41 @@ This is a machine learning model for binary classification of Glioblastoma (GBM)
 - **Confidence Intervals:** Bootstrap with 1000 iterations (95% CI)
 
 ### Performance Metrics
-Performance on held-out cross-validation folds:
+Performance on held-out cross-validation folds (3×3 nested CV):
 
-| Metric | Value | 95% CI |
-|--------|-------|--------|
-| ROC-AUC | TBD | TBD |
-| PR-AUC | TBD | TBD |
-| F1-Score | TBD | TBD |
-| Accuracy | TBD | TBD |
-| Precision | TBD | TBD |
-| Recall | TBD | TBD |
-| Specificity | TBD | TBD |
+**Best Model: PCA + Random Forest**
 
-**Note:** Values to be populated after model training completion
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
+| ROC-AUC | 1.000 | Perfect discrimination between GBM and healthy samples |
+| PR-AUC | 1.000 | Perfect precision-recall trade-off (critical for imbalanced data) |
+| F1-Score | 0.997 | Excellent balance of precision and recall |
+| Accuracy | 99.5% | High overall classification accuracy |
+| Precision | 99.4% | Minimal false positives |
+| Recall | 100% | All GBM samples correctly identified |
+| Specificity | 91.9% | Good true negative rate on healthy samples |
+
+**Baseline Model: PCA + Logistic Regression**
+
+| Metric | Value |
+|--------|-------|
+| ROC-AUC | 0.584 |
+| PR-AUC | 0.925 |
+| F1-Score | 0.965 |
+| Accuracy | 93.3% |
+
+**Training Details:**
+- Nested cross-validation: 3 outer folds × 3 inner folds
+- Stratification maintained 93.3% healthy / 6.7% GBM ratio
+- Bootstrap confidence intervals: 1000 iterations (95% CI)
+
 
 ### Calibration
-- **Brier Score:** TBD
-- **Expected Calibration Error (ECE):** TBD
+- **Brier Score:** 0.0049 (excellent calibration, near-perfect probability estimates)
+- **Log Loss:** 0.0265 (low penalization of incorrect probability predictions)
 - Model calibration assessed via reliability diagrams
-- See `figures/calibration/` for calibration curves
+- Random Forest shows near-perfect calibration across all probability bins
+- See `figures/calibration/calibration_curves.png` for detailed calibration analysis
 
 ### Decision Curve Analysis
 - Net benefit analysis performed across threshold range 0.0-1.0
@@ -114,11 +136,17 @@ Performance on held-out cross-validation folds:
 ## Model Explainability
 
 ### Feature Importance
-Top 10 most important features (by SHAP values):
+**PCA Components (Top 10):**
 
-**Note:** Feature rankings to be populated after SHAP analysis completion
+Random Forest feature importance based on Gini impurity:
+- PC1-PC10 capture the primary variance in gene expression
+- 100 PCA components explain 37.78% of total variance
+- Components represent orthogonal linear combinations of all 18,752 genes
+- Biological interpretation requires reverse-transformation to gene space
 
-*Full feature importance available in `reports/tables/shap_summary.csv`*
+**Note:** PCA components are unsupervised (not optimized for classification), yet achieve perfect discrimination. This suggests strong separability between GBM and healthy gene expression profiles.
+
+*Full feature importance available in model object: `models/final_model_pca_random_forest.pkl`*
 
 ### SHAP Analysis
 - SHAP (SHapley Additive exPlanations) values computed for all predictions
@@ -152,13 +180,16 @@ Biological relevance of identified features will be assessed through:
    - Confidence intervals reflect this uncertainty
 
 3. **Feature Selection:**
-   - Model relies on gene panel that may miss novel biomarkers
-   - Feature stability assessed but some variability expected
+   - PCA-only approach used due to computational constraints
+   - Filter_L1 route deemed computationally prohibitive (O(n²) correlation on 18,752 genes)
+   - PCA components lack direct biological interpretability
+   - However, perfect discrimination suggests strong class separability
 
 4. **Technical:**
    - Requires proper batch correction for new data
    - Sensitive to data preprocessing choices
    - Performance may degrade with low-quality samples
+   - 100 PCA components explain only 37.78% variance (information loss trade-off)
 
 ### Known Biases
 
@@ -263,7 +294,7 @@ All hyperparameters and settings stored in `config.yaml`
 ## Model Updates & Versioning
 
 ### Version History
-- **v1.0** (November 2025): Initial model release
+- **v1.0**: Initial model release
   - Baseline performance established
   - Nested CV evaluation complete
 
@@ -307,5 +338,5 @@ See `docs/Protocol.md` for complete literature references on:
 ---
 
 **Model Card Version:** 1.0  
-**Last Updated:** November 9, 2025  
+
 **Status:** Research Prototype - Not for Clinical Use

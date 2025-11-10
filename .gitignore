@@ -13,10 +13,34 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 
+# Ignore logs and training output
+logs/
+logs/*.log
+logs/*.err
+training_*.log
+training_*.err
+nohup.out
+
 # Ignore environment and OS files
 env/
 .venv/
 .DS_Store
+.training_pid
 
 # Ignore VSCode settings
 .vscode/
+
+# Ignore generated model files (large pickle files)
+models/*.pkl
+
+# Ignore large figure files (optional - keep if tracking is important)
+figures/
+
+# Ignore reports that are auto-generated
+reports/tables/*.csv
+reports/tables/*.tex
+reports/html/
+
+# Ignore old/archived documentation
+docs_old/
+

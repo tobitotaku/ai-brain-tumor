@@ -1,11 +1,10 @@
 """
-Model Definitions Module
-=======================
+Model Definitions Module (Config-Driven)
+========================================
 This module defines machine learning models for GBM classification,
 including Logistic Regression, Random Forest, and Gradient Boosting.
+All hyperparameters are read from configuration files (no hardcoded values).
 
-Author: Musab 0988932
-Date: November 2025
 """
 
 from sklearn.linear_model import LogisticRegression
@@ -40,18 +39,21 @@ def get_model_config(model_name: str, config: dict) -> Tuple[Any, Dict]:
         logger.warning(f"Model {model_name} is disabled in configuration")
         return None, None
     
-    # Get parameter grid
+    # Get parameter grid from config
     param_grid = model_config.get('param_grid', {})
     
-    # Create model instance
+    # Get random state from global config
+    random_state = config.get('random_state', 42)
+    
+    # Create model instance with config parameters
     if model_name == 'lr_elasticnet':
-        model = create_logistic_regression()
+        model = create_logistic_regression(random_state=random_state)
     elif model_name == 'random_forest':
-        model = create_random_forest()
+        model = create_random_forest(random_state=random_state)
     elif model_name == 'lightgbm':
-        model = create_lightgbm()
+        model = create_lightgbm(random_state=random_state)
     elif model_name == 'xgboost':
-        model = create_xgboost()
+        model = create_xgboost(random_state=random_state)
     else:
         raise ValueError(f"Unknown model: {model_name}")
     
@@ -60,39 +62,45 @@ def get_model_config(model_name: str, config: dict) -> Tuple[Any, Dict]:
     return model, param_grid
 
 
-def create_logistic_regression() -> LogisticRegression:
+def create_logistic_regression(random_state: int = 42) -> LogisticRegression:
     """
     Create Logistic Regression with ElasticNet regularization.
     
     ElasticNet combines L1 (feature selection) and L2 (regularization)
     penalties, controlled by the l1_ratio parameter.
     
+    Parameters:
+        random_state: Random seed for reproducibility.
+        
     Returns:
         LogisticRegression instance.
     """
     model = LogisticRegression(
         penalty='elasticnet',
         solver='saga',  # Supports elasticnet
-        max_iter=1000,
-        random_state=42,
+        max_iter=2000,
+        random_state=random_state,
         n_jobs=-1
     )
     
     return model
 
 
-def create_random_forest() -> RandomForestClassifier:
+def create_random_forest(random_state: int = 42) -> RandomForestClassifier:
     """
     Create Random Forest classifier.
     
     Random Forest is an ensemble of decision trees that provides
     good performance and feature importance estimates.
     
+    Parameters:
+        random_state: Random seed for reproducibility.
+        
     Returns:
         RandomForestClassifier instance.
     """
     model = RandomForestClassifier(
-        random_state=42,
+        random_state=random_state,
         n_jobs=-1,
         oob_score=False  # Will use CV for evaluation
     )
@@ -100,20 +108,23 @@ def create_random_forest() -> RandomForestClassifier:
     return model
 
 
-def create_lightgbm() -> LGBMClassifier:
+def create_lightgbm(random_state: int = 42) -> LGBMClassifier:
     """
     Create LightGBM classifier.
     
     LightGBM is a gradient boosting framework that uses tree-based
     learning algorithms, optimized for speed and efficiency.
     
+    Parameters:
+        random_state: Random seed for reproducibility.
+        
     Returns:
         LGBMClassifier instance.
     """
     model = LGBMClassifier(
         objective='binary',
         boosting_type='gbdt',
-        random_state=42,
+        random_state=random_state,
         n_jobs=-1,
         verbose=-1  # Suppress warnings
     )
@@ -121,20 +132,23 @@ def create_lightgbm() -> LGBMClassifier:
     return model
 
 
-def create_xgboost() -> XGBClassifier:
+def create_xgboost(random_state: int = 42) -> XGBClassifier:
     """
     Create XGBoost classifier.
     
     XGBoost is a powerful gradient boosting implementation with
     regularization and advanced optimization.
     
+    Parameters:
+        random_state: Random seed for reproducibility.
+        
     Returns:
         XGBClassifier instance.
     """
     model = XGBClassifier(
         objective='binary:logistic',
         eval_metric='logloss',
-        random_state=42,
+        random_state=random_state,
         n_jobs=-1,
         verbosity=0  # Suppress warnings
     )

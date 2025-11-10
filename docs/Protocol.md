@@ -3,7 +3,7 @@
 **Project Title:** Machine Learning-Based Glioblastoma Classification Using Gene Expression Profiles  
 **Institution:** Hogeschool Rotterdam, Minor AI in Healthcare  
 **Project Type:** Capstone Project (Retake)  
-**Date:** November 2025  
+
 **Version:** 1.2
 
 ---
@@ -920,8 +920,8 @@ python scripts/generate_model_card.py      # Model card (<1 min)
 **Institution:** Hogeschool Rotterdam, Minor AI in Healthcare
 
 **Change Log:**
-- v1.3 (2025-11-10): Added computationally feasible configuration variant (3×3 nested CV) with academic justification. Maintains all core requirements while enabling completion within retake timeline.
-- v1.2 (2025-11-09): Clarified validation policy (nested CV only), switched to ComBat for normalized data, added RF `max_features`, LightGBM `scale_pos_weight`, PCA variance logging, DCA threshold band, and confounding control note in data sources.
+- v1.3: Added computationally feasible configuration variant (3×3 nested CV) with academic justification. Maintains all core requirements while enabling completion within retake timeline.
+- v1.2: Clarified validation policy (nested CV only), switched to ComBat for normalized data, added RF `max_features`, LightGBM `scale_pos_weight`, PCA variance logging, DCA threshold band, and confounding control note in data sources.
 
 ---
 

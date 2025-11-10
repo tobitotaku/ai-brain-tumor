@@ -3,9 +3,6 @@ Preprocessing Module
 ====================
 This module implements batch correction, normalization, and scaling methods
 for gene expression data, ensuring no data leakage in cross-validation.
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import pandas as pd

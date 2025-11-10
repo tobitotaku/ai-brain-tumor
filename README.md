@@ -24,6 +24,17 @@ This project implements a comprehensive, production-ready machine learning pipel
 
 ---
 
+## ⚡ Which Configuration to Use?
+
+**→ See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for detailed guide on all 8 configs**
+
+**TL;DR:**
+- **First time?** Use `config_smoke_test.yaml` (5-10 min, validates setup)
+- **Main training?** Use `config_ultrafast_pca.yaml` ⭐ (10-15 min, recommended)
+- **Full academic?** Use `config_academic_feasible.yaml` (30-45 min, all requirements)
+
+---
+
 ## ⚡ Computationally Feasible Configuration (NEW)
 
 **Problem:** Original 5×3 nested CV training takes 2-3 hours and cannot be completed by team members.
@@ -67,10 +78,27 @@ This project implements a comprehensive, production-ready machine learning pipel
 
 ```
 .
-├── config.yaml                 # Central configuration file
-├── environment.yml             # Conda environment specification
-├── requirements.txt            # Python dependencies
-├── README.md                   # This file
+├── config/                     # Configuration files
+│   ├── config_ultrafast_pca.yaml           # ⭐ Recommended: Fast PCA
+│   ├── config_fast_filter_l1.yaml          # Experimental: Filter_L1
+│   ├── config_academic_feasible.yaml       # Academic config (30-45 min)
+│   └── config_smoke_test.yaml              # Quick test (5-10 min)
+│
+├── utilities/                  # Helper scripts & launchers
+│   ├── run_training.sh         # Main training launcher
+│   ├── monitor_detailed.sh     # Advanced diagnostics
+│   ├── cleanup_stale.sh        # Process cleanup utility
+│   ├── diagnose_performance.py # Performance diagnostics
+│   ├── generate_training_report.py
+│   └── validate_project.py
+│
+├── docs/                       # Main documentation
+│   └── Protocol.md             # Complete research protocol
+│
+├── docs_old/                   # Archived documentation
+│   ├── TRAINING_STATUS.md
+│   ├── PROJECT_STATUS.md
+│   └── ...
 │
 ├── data/
 │   ├── raw/                    # Original gene expression data
@@ -88,18 +116,19 @@ This project implements a comprehensive, production-ready machine learning pipel
 │   ├── preprocess.py           # Batch correction & scaling
 │   ├── features.py             # Feature selection methods
 │   ├── models.py               # Model definitions
-│   ├── pipeline.py             # Pipeline orchestration
+│   ├── pipeline.py             # Pipeline orchestration + nested CV
 │   ├── eval.py                 # Evaluation metrics
-│   └── plots.py                # Visualization utilities
+│   ├── plots.py                # Visualization utilities
+│   └── logging_config.py        # Enhanced logging system
 │
 ├── scripts/                    # Executable scripts
-│   ├── make_processed.py       # Data preprocessing
-│   ├── train_cv.py             # Nested CV training
-│   └── shap_report.py          # SHAP explainability
+│   ├── train_cv.py             # Nested CV training (main entry point)
+│   ├── monitor_log.py          # Real-time log monitoring
+│   └── shap_compact_panel.py   # SHAP explainability
 │
 ├── notebooks/                  # Jupyter notebooks for EDA
 │   ├── 00_eda.ipynb
-│   └── 01_sanity_checks.ipynb
+│   └── archive/                # Previous versions
 │
 ├── figures/                    # Generated plots
 │   ├── eda/                    # Exploratory data analysis
@@ -111,9 +140,26 @@ This project implements a comprehensive, production-ready machine learning pipel
 │   ├── tables/                 # CSV tables with metrics
 │   └── html/                   # HTML reports (optional)
 │
-└── models/                     # Saved trained models
-    └── final_model_*.pkl
+├── models/                     # Saved trained models
+│   └── final_model_*.pkl
+│
+├── logs/                       # Training logs (auto-generated, .gitignore'd)
+│   └── training_*.log
+│
+├── .gitignore                  # Git ignore rules
+├── config.yaml                 # Legacy main config (deprecated)
+├── environment.yml             # Conda environment specification
+├── requirements.txt            # Python dependencies
+├── README.md                   # This file
+└── SETUP.md                    # Installation instructions
 ```
+
+**Key Changes for Organization:**
+- ✅ Configs moved to `config/` folder
+- ✅ Helper scripts moved to `utilities/` folder
+- ✅ Documentation reorganized (`docs/` and `docs_old/`)
+- ✅ Logs not committed (added to `.gitignore`)
+- ✅ Cleaner root directory
 
 ---
 
@@ -179,48 +225,36 @@ This creates example data files that show the expected format.
 **Quick Smoke Test (5-10 minutes - RECOMMENDED FIRST):**
 ```bash
 # Validate setup with reduced configuration
-python scripts/train_cv.py --config config_smoke_test.yaml
+utilities/run_training.sh config/config_smoke_test.yaml
 ```
 This runs 3×3 CV with PCA only to verify everything works before the full run.
 
-**⭐ RECOMMENDED: Feasible Academic Run (30-45 minutes):**
+**⭐ RECOMMENDED: Ultrafast PCA-Based Training (10-15 minutes):**
 ```bash
 # Use caffeinate on macOS to prevent laptop sleep
-caffeinate -i python scripts/train_cv.py --config config_academic_feasible.yaml
-
-# Alternative: Run in background with logging
-caffeinate -i nohup python scripts/train_cv.py --config config_academic_feasible.yaml > training_feasible.log 2>&1 &
+caffeinate -i utilities/run_training.sh config/config_ultrafast_pca.yaml
 
 # Monitor progress in real-time
-tail -f training_feasible.log
+tail -f logs/training_*.log
 ```
 
 **What this does:**
-- Nested CV: 3 outer × 3 inner folds (academically valid)
-- Feature routes: filter_l1 (100 genes) + PCA (100 components)
+- Nested CV: 3 outer × 3 inner folds (fast & academically valid)
+- Feature route: PCA (100 components)
 - Models: Logistic Regression + Random Forest
 - Evaluation: ROC-AUC, PR-AUC, calibration, decision curves, bootstrap CI
-- Runtime: ~30-45 minutes
-- **See `FEASIBILITY_SOLUTION.md` for academic justification**
+- Runtime: ~10-15 minutes
+- **Memory:** ~12-15 GB peak
 
-**Alternative: Full Training Run (2-3 hours - NOT RECOMMENDED):**
+**Alternative: Filter_L1 Experimental (25-35 minutes):**
 ```bash
-# Use caffeinate on macOS to prevent laptop sleep
-caffeinate -i python scripts/train_cv.py --config config.yaml
-
-# Alternative: Run in background with logging
-caffeinate -i nohup python scripts/train_cv.py --config config.yaml > training.log 2>&1 &
-
-# Monitor progress in real-time
-tail -f training.log
+caffeinate -i utilities/run_training.sh config/config_fast_filter_l1.yaml
 ```
 
-**What this does:**
-- Nested CV: 5 outer × 3 inner folds
-- Feature routes: filter_l1 (200 genes) + PCA (200 components)
-- Models: Logistic Regression, Random Forest, LightGBM
-- Total: ~90 model training runs
-- Outputs: Metrics tables, ROC/PR curves, calibration plots, confusion matrices
+**Legacy: Full Academic Training (30-45 minutes):**
+```bash
+caffeinate -i utilities/run_training.sh config/config_academic_feasible.yaml
+```
 
 **Step 2: Feature Stability Analysis (15-20 minutes):**
 ```bash

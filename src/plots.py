@@ -4,8 +4,6 @@ Visualization Module
 This module provides publication-ready plotting functions for EDA,
 model evaluation, calibration, and explainability analysis.
 
-Author: Musab 0988932  
-Date: November 2025
 """
 
 import matplotlib.pyplot as plt

@@ -3,9 +3,6 @@ Feature Selection Module
 ========================
 This module implements multiple feature selection strategies including
 filter methods, L1 regularization, PCA, and stability selection.
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import pandas as pd
@@ -35,6 +32,7 @@ class FilterL1Selector(BaseEstimator, TransformerMixin):
         variance_threshold: Minimum variance threshold.
         correlation_threshold: Maximum correlation threshold.
         C: Inverse regularization strength for L1.
+        random_state: Random seed for reproducibility.
         
     Attributes:
         selected_features_: Names/indices of selected features.
@@ -46,12 +44,14 @@ class FilterL1Selector(BaseEstimator, TransformerMixin):
         k_best: int = 200,
         variance_threshold: float = 0.01,
         correlation_threshold: float = 0.95,
-        C: float = 1.0
+        C: float = 1.0,
+        random_state: int = 42
     ):
         self.k_best = k_best
         self.variance_threshold = variance_threshold
         self.correlation_threshold = correlation_threshold
         self.C = C
+        self.random_state = random_state
         self.selected_features_ = None
         self.feature_importance_ = None
         
@@ -103,7 +103,7 @@ class FilterL1Selector(BaseEstimator, TransformerMixin):
             C=self.C,
             solver='liblinear',
             max_iter=1000,
-            random_state=42
+            random_state=self.random_state
         )
         
         l1_model.fit(X_corr, y)
@@ -146,6 +146,165 @@ class FilterL1Selector(BaseEstimator, TransformerMixin):
         return self.selected_features_
 
 
+class OptimizedFilterL1Selector(BaseEstimator, TransformerMixin):
+    """
+    Optimized Filter+L1 with ANOVA pre-filtering for computational efficiency.
+    
+    Multi-stage pipeline for high-dimensional feature selection:
+    1. Variance threshold: Remove low-variance features
+    2. ANOVA F-test: Select top-k univariate features (KEY OPTIMIZATION)
+    3. Correlation pruning: Remove redundant features
+    4. L1 regularization: Final multivariate selection
+    
+    This approach reduces correlation computation from O(p²) to O(k²) where k << p,
+    enabling efficient processing of high-dimensional genomic data (18K+ features).
+    
+    Parameters:
+        k_best: Number of final features to select.
+        k_prefilter: Number of features after ANOVA pre-filtering (reduces corr. cost).
+        variance_threshold: Minimum variance threshold.
+        correlation_threshold: Maximum correlation threshold.
+        C: Inverse regularization strength for L1.
+        random_state: Random seed for reproducibility.
+        
+    Attributes:
+        selected_features_: Names/indices of selected features.
+        feature_importance_: Importance scores for selected features.
+        
+    References:
+        - Saeys et al. (2007). Bioinformatics 23(19):2507-17
+        - Guyon & Elisseeff (2003). JMLR 3:1157-82
+    """
+    
+    def __init__(
+        self,
+        k_best: int = 200,
+        k_prefilter: int = 2000,
+        variance_threshold: float = 0.01,
+        correlation_threshold: float = 0.95,
+        C: float = 1.0,
+        random_state: int = 42
+    ):
+        self.k_best = k_best
+        self.k_prefilter = k_prefilter
+        self.variance_threshold = variance_threshold
+        self.correlation_threshold = correlation_threshold
+        self.C = C
+        self.random_state = random_state
+        self.selected_features_ = None
+        self.feature_importance_ = None
+        
+    def fit(self, X: Union[pd.DataFrame, np.ndarray], y: np.ndarray):
+        """
+        Fit the optimized feature selector on training data.
+        
+        Parameters:
+            X: Feature matrix (samples × genes).
+            y: Target labels.
+            
+        Returns:
+            self
+        """
+        # Convert to DataFrame if needed
+        is_dataframe = isinstance(X, pd.DataFrame)
+        if not is_dataframe:
+            X = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(X.shape[1])])
+        
+        logger.info(f"OptimizedFilterL1: Starting from {X.shape[1]} features")
+        
+        # Step 1: Variance filtering
+        var_filter = VarianceThreshold(threshold=self.variance_threshold)
+        X_var = var_filter.fit_transform(X)
+        var_features = X.columns[var_filter.get_support()].tolist()
+        
+        logger.info(f"  → After variance filter: {len(var_features)} features")
+        
+        # Step 2: ANOVA F-test pre-filtering (KEY OPTIMIZATION)
+        X_var_df = pd.DataFrame(X_var, columns=var_features, index=X.index)
+        k_prefilter_actual = min(self.k_prefilter, len(var_features))
+        f_selector = SelectKBest(f_classif, k=k_prefilter_actual)
+        X_prefiltered = f_selector.fit_transform(X_var_df, y)
+        prefilter_mask = f_selector.get_support()
+        prefiltered_features = [var_features[i] for i, selected in enumerate(prefilter_mask) if selected]
+        
+        logger.info(f"  → After ANOVA F-test: {len(prefiltered_features)} features (reduces corr. from {len(var_features)}² to {len(prefiltered_features)}²)")
+        
+        # Step 3: Correlation filtering (OPTIMIZED - vectorized, memory-efficient)
+        X_prefiltered_array = X_prefiltered
+        n_features = X_prefiltered_array.shape[1]
+        
+        # Use numpy for faster correlation computation
+        # Normalize columns for correlation computation
+        X_norm = (X_prefiltered_array - X_prefiltered_array.mean(axis=0)) / X_prefiltered_array.std(axis=0)
+        
+        # Compute correlation matrix efficiently
+        corr_matrix = np.abs(np.corrcoef(X_norm.T))
+        
+        # Identify features to drop using upper triangle
+        to_drop_indices = set()
+        for i in range(n_features):
+            for j in range(i + 1, n_features):
+                if corr_matrix[i, j] > self.correlation_threshold:
+                    # Drop the feature with lower variance (keep more informative one)
+                    if X_prefiltered_array[:, i].var() < X_prefiltered_array[:, j].var():
+                        to_drop_indices.add(i)
+                    else:
+                        to_drop_indices.add(j)
+        
+        keep_indices = [i for i in range(n_features) if i not in to_drop_indices]
+        corr_features = [prefiltered_features[i] for i in keep_indices]
+        X_corr = X_prefiltered[:, keep_indices]
+        
+        logger.info(f"  → After correlation pruning: {len(corr_features)} features")
+        
+        # Step 4: L1 regularization
+        l1_model = LogisticRegression(
+            penalty='l1',
+            C=self.C,
+            solver='liblinear',
+            max_iter=5000,  # Increased for convergence on high-dimensional data
+            random_state=self.random_state
+        )
+        
+        l1_model.fit(X_corr, y)
+        
+        # Get feature importance (absolute coefficients)
+        importance = np.abs(l1_model.coef_[0])
+        
+        # Select top k features
+        k_actual = min(self.k_best, len(corr_features))
+        top_indices = np.argsort(importance)[-k_actual:][::-1]
+        
+        self.selected_features_ = [corr_features[i] for i in top_indices]
+        self.feature_importance_ = {
+            corr_features[i]: importance[i] for i in top_indices
+        }
+        
+        logger.info(f"  → Final L1 selection: {len(self.selected_features_)} features")
+        
+        return self
+    
+    def transform(self, X: Union[pd.DataFrame, np.ndarray]):
+        """
+        Transform data by selecting features.
+        
+        Parameters:
+            X: Feature matrix.
+            
+        Returns:
+            Transformed matrix with selected features only.
+        """
+        if isinstance(X, pd.DataFrame):
+            return X[self.selected_features_]
+        else:
+            # For numpy array, assume same column order as fit
+            raise NotImplementedError("OptimizedFilterL1Selector requires DataFrame input for safety")
+    
+    def get_feature_names_out(self, input_features=None):
+        """Get names of selected features (sklearn compatibility)."""
+        return self.selected_features_
+
+
 class PCASelector(BaseEstimator, TransformerMixin):
     """
     Dimensionality reduction using Principal Component Analysis.
@@ -155,14 +314,16 @@ class PCASelector(BaseEstimator, TransformerMixin):
     
     Parameters:
         n_components: Number of components to keep.
+        random_state: Random seed for reproducibility.
         
     Attributes:
         pca_: Fitted PCA object.
         explained_variance_ratio_: Variance explained by each component.
     """
     
-    def __init__(self, n_components: int = 50):
+    def __init__(self, n_components: int = 50, random_state: int = 42):
         self.n_components = n_components
+        self.random_state = random_state
         self.pca_ = None
         self.explained_variance_ratio_ = None
         
@@ -179,7 +340,7 @@ class PCASelector(BaseEstimator, TransformerMixin):
         """
         X_array = X.values if isinstance(X, pd.DataFrame) else X
         
-        self.pca_ = PCA(n_components=self.n_components, random_state=42)
+        self.pca_ = PCA(n_components=self.n_components, random_state=self.random_state)
         self.pca_.fit(X_array)
         
         self.explained_variance_ratio_ = self.pca_.explained_variance_ratio_
@@ -436,12 +597,24 @@ def create_feature_selector(
         return FilterL1Selector(
             k_best=config['features'].get('k_best', 200),
             variance_threshold=config['preprocessing'].get('variance_threshold', 0.01),
-            correlation_threshold=config['preprocessing'].get('correlation_threshold', 0.95)
+            correlation_threshold=config['preprocessing'].get('correlation_threshold', 0.95),
+            random_state=config.get('random_state', 42)
+        )
+    
+    elif method == "filter_l1_optimized":
+        return OptimizedFilterL1Selector(
+            k_best=config['features'].get('k_best', 200),
+            k_prefilter=config['features'].get('k_prefilter', 2000),
+            variance_threshold=config['preprocessing'].get('variance_threshold', 0.01),
+            correlation_threshold=config['preprocessing'].get('correlation_threshold', 0.95),
+            C=config['features'].get('l1_C', 1.0),
+            random_state=config.get('random_state', 42)
         )
     
     elif method == "pca":
         return PCASelector(
-            n_components=config['features'].get('pca_components', 50)
+            n_components=config['features'].get('pca_components', 50),
+            random_state=config.get('random_state', 42)
         )
     
     elif method == "bio_panel":

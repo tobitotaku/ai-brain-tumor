@@ -7,7 +7,7 @@ This dataset contains gene expression profiles from Glioblastoma (GBM) patients 
 
 **Dataset Name:** GBM Gene Expression Dataset  
 **Version:** 1.0  
-**Last Updated:** November 2025  
+
 **License:** Public domain (derived from public repositories)  
 **Contact:** https://github.com/tobitotaku/ai-brain-tumor
 
@@ -179,7 +179,6 @@ This dataset aggregates publicly available TCGA and GTEx data. Please cite the o
   - `expression_processed.csv` - Processed expression data
 
 ### Updates
-- **Version 1.0:** Initial release (November 2025)
 - Future updates will be documented here
 
 ---
@@ -192,5 +191,5 @@ For questions about this dataset:
 
 ---
 
-**Last Updated:** November 9, 2025  
+
 **Version:** 1.0

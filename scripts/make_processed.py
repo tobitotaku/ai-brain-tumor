@@ -7,9 +7,6 @@ and saves processed data for downstream analysis.
 
 Usage:
     python scripts/make_processed.py --config config.yaml
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import sys

@@ -6,9 +6,6 @@ Generates feature importance analysis without SHAP dependency.
 
 Usage:
     python scripts/feature_importance_report.py --config config.yaml
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import sys

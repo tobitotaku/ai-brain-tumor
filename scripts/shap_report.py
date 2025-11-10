@@ -7,9 +7,6 @@ and reports for model explainability.
 
 Usage:
     python scripts/shap_report.py --config config.yaml --model models/final_model.pkl
-
-Author: Musab 0988932
-Date: November 2025
 """
 
 import sys
