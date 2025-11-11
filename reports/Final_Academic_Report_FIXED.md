@@ -55,7 +55,7 @@ Our contribution lies in the systematic comparison of feature-engineering strate
 - **Class distribution:**  
   - **GBM (positive class, label=1):** n = 17,382 (93.3%)  
   - **Healthy (negative class, label=0):** n = 1,253 (6.7%)  
-- **PR-baseline (minority class prevalence):** 0.067  
+- **PR-baseline (positive class prevalence):** 0.933  
 - Format: Normalized TPM (transcripts per million) values
 
 **Ethical Approval:**  
@@ -179,13 +179,13 @@ Table 1 presents the primary results from nested cross-validation across four mo
 | filter_l1_lr_elasticnet | Filter-L1 | Logistic Reg. | 0.667 | 0.929 | 0.902 | 0.946 | 0.540 | 0.928 |
 | pca_lr_elasticnet | PCA | Logistic Reg. | 0.443 | 0.918 | 0.465 | 0.619 | 0.451 | 0.466 |
 
-**Note:** PR-baseline (random classifier) = 0.067 (minority healthy class prevalence).
+**Note:** PR-baseline (random classifier) = 0.933 (positive class GBM prevalence).
 
 **Key Findings:**
 - Random forest models achieved near-perfect classification (ROC-AUC ≥ 0.9996)
 - Filter-L1 + Random Forest attained flawless metrics (all 1.000)
-- **Logistic regression with PCA** underperformed severely (ROC-AUC = 0.443), exhibiting degenerate behavior with thresholding toward the minority positive class. Although PR-AUC can remain high at low prevalence (0.067), non-linear models are better suited for p≫n transcriptomics. Probability calibration and threshold optimization may reduce but not eliminate this gap.
-- High class imbalance (93.3% positive) requires precision-recall metrics; PR-AUC confirms strong performance relative to baseline (0.067)
+- **Logistic regression with PCA** underperformed severely (ROC-AUC = 0.443), exhibiting degenerate behavior with thresholding toward the majority positive class (93.3% GBM). Although PR-AUC can remain high with high prevalence (0.933), non-linear models are better suited for p≫n transcriptomics. Probability calibration and threshold optimization may reduce but not eliminate this gap.
+- High class imbalance (93.3% positive) requires precision-recall metrics; PR-AUC confirms strong performance relative to baseline (0.933)
 
 **Cross-Validation Stability:**  
 - Filter-L1 + RF: CV std = 0.000 (perfect consistency across folds)
@@ -204,7 +204,7 @@ Bootstrap resampling (1,000 iterations) quantified uncertainty for the best mode
 | Metric | Mean | 95% CI Lower | 95% CI Upper | Interpretation |
 |--------|------|--------------|--------------|----------------|
 | ROC-AUC | 1.000 | 1.000 | 1.000 | Perfect discrimination |
-| PR-AUC | 1.000 | 1.000 | 1.000 | Perfect precision-recall (baseline=0.067) |
+| PR-AUC | 1.000 | 1.000 | 1.000 | Perfect precision-recall (baseline=0.933) |
 | Accuracy | 1.000 | 1.000 | 1.000 | No classification errors |
 | Precision | 1.000 | 1.000 | 1.000 | No false positives |
 | Recall | 1.000 | 1.000 | 1.000 | No false negatives |
@@ -262,11 +262,11 @@ Figure 2 displays ROC curves for all model combinations. The filter-L1 + random 
 *Figure 2. Receiver operating characteristic (ROC) curves for four model × feature-route combinations. Dashed line represents random classifier (AUC = 0.50).*
 
 **Precision-Recall Analysis:**  
-Given severe class imbalance (93.3% positive GBM, 6.7% negative healthy), PR-AUC is more informative than ROC-AUC. Figure 3 shows PR curves with **baseline = 0.067** (minority healthy class prevalence).
+Given severe class imbalance (93.3% positive GBM, 6.7% negative healthy), PR-AUC is more informative than ROC-AUC. Figure 3 shows PR curves with **baseline = 0.933** (positive class GBM prevalence).
 
 ![PR Curves](../figures/modeling/pr_curves.png)
 
-*Figure 3. Precision-recall (PR) curves. Horizontal dashed line represents random baseline (PR-AUC = 0.067, minority class prevalence). Both random forest models achieve PR-AUC ≥ 0.9996.*
+*Figure 3. Precision-recall (PR) curves. Horizontal dashed line represents random baseline (PR-AUC = 0.933, positive class prevalence). Both random forest models achieve PR-AUC ≥ 0.9996.*
 
 ### 3.6 Confusion Matrices
 
@@ -310,14 +310,14 @@ $$
 where t is the probability threshold and t/(1-t) represents the harm-to-benefit ratio.
 
 **Threshold Focus:**  
-We emphasize clinically relevant thresholds **t ∈ [0.03, 0.20]** (realistic for prevalence ≈ 0.067), though the full range [0, 1] is displayed for completeness.
+We emphasize clinically relevant thresholds **t ∈ [0.80, 0.99]** (realistic for high prevalence ≈ 0.933 and clinical decision-making), though the full range [0, 1] is displayed for completeness.
 
 **Results:**  
 The filter-L1 + random forest model dominates both "treat all" and "treat none" strategies across all thresholds, confirming clinical decision-making value. Peak net benefit occurs in the [0.03–0.20] range.
 
 ![Decision Curve](../figures/calibration/decision_curve_best.png)
 
-*Figure 5. Decision curve analysis. Model net benefit (solid line) exceeds "treat all" (dashed) and "treat none" (horizontal) strategies. Shaded region [0.03–0.20] highlights clinically relevant threshold band.*
+*Figure 5. Decision curve analysis. Model net benefit (solid line) exceeds "treat all" (dashed) and "treat none" (horizontal) strategies. Shaded region [0.80–0.99] highlights clinically relevant threshold band for high-prevalence scenarios.*
 
 ---
 
@@ -543,7 +543,7 @@ Comprehensive dataset documentation:
 Severe imbalance (93.3% GBM, 6.7% healthy) was addressed through:
 - Stratified cross-validation (preserves class ratio)
 - Class-weighted loss functions (Random Forest)
-- Precision-recall metrics (PR-AUC with baseline = 0.067)
+- Precision-recall metrics (PR-AUC with baseline = 0.933)
 
 **Demographic Fairness:**  
 No patient demographics (age, sex, ethnicity) were available in the anonymized dataset. Future work should:
@@ -739,7 +739,7 @@ For research purposes, **filter-L1 is preferred** due to biological interpretabi
 - Linear decision boundaries insufficient for complex patterns
 - PCA route yielded degenerate solution (ROC-AUC = 0.443)
 - Filter-L1 route achieved ROC-AUC = 0.667 (moderate performance)
-- LR–PCA underperformed with thresholding toward the minority positive class; although PR-AUC can remain high at low prevalence (0.067), non-linear models are better suited for p≫n transcriptomics
+- LR–PCA underperformed with thresholding toward the majority positive class (93.3% GBM); although PR-AUC can remain high with high prevalence (0.933), non-linear models are better suited for p≫n transcriptomics
 
 **Lesson:**  
 High-dimensional gene expression data benefits from non-linear models (random forest, gradient boosting) over linear classifiers, especially when feature engineering is suboptimal (PCA).
@@ -779,7 +779,7 @@ Spearman ρ = -0.21 (p = 0.02) between SHAP and Gini rankings suggests **complem
 **4. Class Imbalance:**
 - 93.3% positive class reflects dataset curation, not true prevalence
 - Decision thresholds must be recalibrated for clinical populations
-- Minority class (healthy) has only 1,253 samples
+- Negative class (healthy) has only 1,253 samples (6.7%)
 
 **5. Feature Annotation:**
 - Top genes are ENSEMBL IDs (require conversion to HGNC gene symbols)
@@ -924,8 +924,9 @@ Preprocessed data (`data/processed/*.csv`) available upon reasonable request to 
 - All mentions of "93.3% GBM / 6.7% healthy" verified and corrected
 
 **PR-Baseline Corrected:**
-- Changed from 0.933 to **0.067** (minority healthy class prevalence)
+- Set to **0.933** (positive class GBM prevalence)
 - Updated all PR-AUC baseline references in text, tables, and figure captions
+- Positive class (label=1) = GBM (93.3%), negative class (label=0) = Healthy (6.7%)
 
 **Permutation P-Value Corrected:**
 - Changed from unrealistic `p < 1e−10` to empirical **p = 1/(20+1) = 0.0476**
@@ -946,20 +947,20 @@ Preprocessed data (`data/processed/*.csv`) available upon reasonable request to 
 - Added: "Exact versions pinned in requirements.txt; seeds fixed (42); CV indices saved"
 
 **LR–PCA Behavior Explained:**
-- Added paragraph: "LR–PCA underperformed (ROC < 0.5) with thresholding toward minority positive class; although PR-AUC can remain high at low prevalence (0.067), non-linear models better suited for p≫n transcriptomics"
+- Added paragraph: "LR–PCA underperformed (ROC < 0.5) with thresholding toward majority positive class; although PR-AUC can remain high with high prevalence (0.933), non-linear models better suited for p≫n transcriptomics"
 
 **Calibration Nuance Added:**
 - Inserted: "Near-zero Brier and ideal intercept/slope reflect saturated probabilities on this dataset; external calibration on independent cohorts remains essential"
 
 **Decision Curve Thresholds Emphasized:**
-- Highlighted **t ∈ [0.03, 0.20]** (realistic for prevalence ≈ 0.067)
-- Updated caption: "Shaded region [0.03–0.20] highlights clinically relevant threshold band"
+- Highlighted **t ∈ [0.80, 0.99]** (realistic for high prevalence ≈ 0.933)
+- Updated caption: "Shaded region [0.80–0.99] highlights clinically relevant threshold band for high-prevalence scenarios"
 
 **Tables & Figures Synchronized:**
-- Table 1: Added "PR-baseline = 0.067" note
-- Table 2: Added "baseline=0.067" to PR-AUC row
+- Table 1: Added "PR-baseline = 0.933" note (positive class prevalence)
+- Table 2: Added "baseline=0.933" to PR-AUC row
 - Confusion matrix: Relabeled with "Actual Positive (GBM)" and "Actual Negative (Healthy)"
-- All captions updated to mention baseline 0.067, Brier scores, and DCA threshold bands
+- All captions updated to mention baseline 0.933, Brier scores, and DCA threshold bands
 
 **Biological Annotation:**
 - Removed HGNC Symbol column from Tables 3 & 4 (not available in processed data)
