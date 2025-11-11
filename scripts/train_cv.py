@@ -307,19 +307,23 @@ def main(config_path: str):
     y_true_plot = all_predictions[top_models[0]]['y_true']
     
     # ROC curves
+    n_models = len(y_prob_dict)
+    title = f'ROC Curves - Top {n_models} Models' if n_models > 1 else 'ROC Curves'
     plot_roc_curve(
         y_true_plot,
         y_prob_dict,
-        title='ROC Curves - Top 5 Models',
+        title=title,
         save_path=figures_dir / 'modeling' / 'roc_curves.png'
     )
     logger.info("Created ROC curves")
     
     # PR curves
+    n_models = len(y_prob_dict)
+    title = f'Precision-Recall Curves - Top {n_models} Models' if n_models > 1 else 'Precision-Recall Curves'
     plot_precision_recall_curve(
         y_true_plot,
         y_prob_dict,
-        title='Precision-Recall Curves - Top 5 Models',
+        title=title,
         save_path=figures_dir / 'modeling' / 'pr_curves.png'
     )
     logger.info("Created PR curves")
