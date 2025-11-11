@@ -91,9 +91,6 @@ scripts/stability_analysis.py
 scripts/stability_analysis_v2.py
 scripts/enhanced_train_cv.py
 
-# Figures (auto-generated)
-figures/
-
 # Archived/Old Documentation
 docs_old/
 
