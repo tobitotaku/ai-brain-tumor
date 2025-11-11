@@ -261,9 +261,12 @@ class OptimizedFilterL1Selector(BaseEstimator, TransformerMixin):
         l1_model = LogisticRegression(
             penalty='l1',
             C=self.C,
-            solver='liblinear',
-            max_iter=5000,  # Increased for convergence on high-dimensional data
-            random_state=self.random_state
+            solver='saga',  # Better scalability for high-dimensional sparse solutions
+            max_iter=2000,
+            tol=2e-3,  # Relaxed tolerance for faster convergence (vs 1e-3)
+            warm_start=True,
+            random_state=self.random_state,
+            n_jobs=-1
         )
         
         l1_model.fit(X_corr, y)
@@ -594,10 +597,16 @@ def create_feature_selector(
         Feature selector instance.
     """
     if method == "filter_l1":
-        return FilterL1Selector(
-            k_best=config['features'].get('k_best', 200),
+        # Route classic filter_l1 to the optimized implementation for feasibility
+        # Use k_final if specified, otherwise fallback to k_best
+        k_final = config['features'].get('k_final', config['features'].get('k_best', 200))
+        return OptimizedFilterL1Selector(
+            k_best=k_final,
+            # Use a lower default k_prefilter for speed if not specified
+            k_prefilter=config['features'].get('k_prefilter', 1000),
             variance_threshold=config['preprocessing'].get('variance_threshold', 0.01),
             correlation_threshold=config['preprocessing'].get('correlation_threshold', 0.95),
+            C=config['features'].get('l1_C', 1.0),
             random_state=config.get('random_state', 42)
         )
     

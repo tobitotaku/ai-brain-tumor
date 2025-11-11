@@ -77,6 +77,15 @@ fi
 PYTHON_VERSION=$(python --version 2>&1)
 echo "✓ Python: $PYTHON_VERSION"
 
+# Set CPU threading for optimal performance on Mac
+NUM_CORES=$(sysctl -n hw.logicalcpu)
+export OMP_NUM_THREADS=$NUM_CORES
+export MKL_NUM_THREADS=$NUM_CORES
+export OPENBLAS_NUM_THREADS=$NUM_CORES
+export VECLIB_MAXIMUM_THREADS=$NUM_CORES
+export NUMEXPR_NUM_THREADS=$NUM_CORES
+echo "✓ CPU threads set to: $NUM_CORES cores"
+
 # Launch training in background with proper I/O redirection
 echo ""
 echo "Starting training in background..."

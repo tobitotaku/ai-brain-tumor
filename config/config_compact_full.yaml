@@ -1,0 +1,166 @@
+# Compact Full Configuration
+# All 4 model-feature combinations: PCA + Filter_L1 × LR + RF
+# Compact settings: 3×2 nested CV, faster parameters for Mac CPU
+
+random_state: 42
+project_name: "GBM_Classification_Compact_Full"
+verbose: true
+
+cv:
+  outer_folds: 3  # Compact: 3 outer folds (vs 5 for academic full)
+  inner_folds: 2  # Compact: 2 inner folds (vs 3 for academic full)
+  stratified: true
+  shuffle: true
+  test_size: 0.2
+
+preprocessing:
+  batch_correction: "combat"
+  scaler: "standard"
+  remove_low_variance: true
+  variance_threshold: 0.01
+  correlation_threshold: 0.95
+
+# Feature routes: both PCA and Filter_L1
+features:
+  routes:
+    - "pca"       # Fast, linear dimensionality reduction
+    - "filter_l1" # Sparse feature selection with biological interpretability
+  
+  # PCA settings (compact)
+  pca_components: 80  # Compact: 80 components (vs 120-200 for academic)
+  
+  # Filter_L1 settings (compact but feasible)
+  k_prefilter: 400   # Pre-filter to top 400 by variance/correlation
+  k_final: 120       # Final L1 selection to 120 features
+  variance_threshold: 0.01
+  correlation_threshold: 0.95
+  l1_C: 1.0          # Moderate regularization
+  
+  # Stability selection (disabled for speed)
+  stability_selection:
+    enabled: false
+  
+  bio_panel_path: "metadata/biopanel.csv"
+
+# Models: Logistic Regression (ElasticNet) + Random Forest
+models:
+  lr_elasticnet:
+    enabled: true
+    param_grid:
+      classifier__C: [0.3, 1.0, 3.0]  # Compact: 3 values (vs 5 for academic)
+      classifier__l1_ratio: [0.5, 0.7]  # ElasticNet mixing
+      classifier__max_iter: [2000]
+      classifier__class_weight: ["balanced"]
+  
+  random_forest:
+    enabled: true
+    param_grid:
+      classifier__n_estimators: [400]  # Compact: 400 trees (vs 800 for academic)
+      classifier__max_depth: [20, 30]  # Moderate depth
+      classifier__min_samples_split: [5, 10]
+      classifier__min_samples_leaf: [2, 4]
+      classifier__class_weight: ["balanced"]
+      classifier__n_jobs: [-1]  # Use all CPU cores
+
+# Evaluation metrics (full academic suite)
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "roc_auc"
+    - "pr_auc"
+    - "specificity"
+    - "npv"  # Negative Predictive Value
+  
+  # Calibration analysis
+  calibration:
+    enabled: true
+    n_bins: 10
+    method: "isotonic"  # Non-parametric calibration
+  
+  # Decision curve analysis
+  decision_curve:
+    enabled: true
+    threshold_range: [0.0, 1.0]
+    n_thresholds: 100
+  
+  # Bootstrap confidence intervals
+  bootstrap_ci:
+    enabled: true
+    n_bootstrap: 1000  # Compact: 1000 (vs 2000-5000 for academic)
+    confidence: 0.95
+  
+  # Primary metric for optimization
+  primary_metric: "pr_auc"  # PR-AUC is better for imbalanced data
+
+# SHAP analysis (disabled for compact run, enable for final)
+shap:
+  enabled: false  # Set to true for interpretability analysis
+  n_samples: 100
+  plots:
+    - "beeswarm"
+    - "bar"
+  top_features: 20
+
+# Ablation study (disabled for compact)
+ablation:
+  enabled: false
+
+# Permutation test settings
+permutation:
+  enabled: true  # Run sanity check with shuffled labels
+  n_permutations: 20  # Compact: 20 permutations
+  random_state: 42
+
+# Paths
+paths:
+  raw: "data/raw"
+  interim: "data/interim"
+  processed: "data/processed"
+  metadata: "metadata"
+  figures: "figures"
+  reports: "reports"
+  notebooks: "notebooks"
+  src: "src"
+  scripts: "scripts"
+  models: "models"
+  outputs: "outputs"
+
+# Output settings
+output:
+  save_models: true
+  save_predictions: true
+  save_probabilities: true
+  save_oof_predictions: true  # Out-of-fold predictions for calibration
+  figure_format: "png"
+  figure_dpi: 300
+  table_format: "csv"
+
+# CPU optimization for Mac
+compute:
+  n_jobs: -1  # Use all available cores
+  backend: "loky"  # Robust parallelization
+  batch_size: "auto"
+  verbose: 1
+
+# Memory management
+memory:
+  cache_pipeline: false  # Disable caching for large datasets
+  low_memory_mode: false
+  chunk_size: 1000
+
+# Logging
+logging:
+  level: "INFO"
+  console: true
+  file: true
+  progress_bar: true
+
+# Quality checks
+quality:
+  check_leakage: true  # Verify no preprocessing outside pipeline
+  check_duplicates: true
+  check_label_distribution: true
+  min_samples_per_class: 10

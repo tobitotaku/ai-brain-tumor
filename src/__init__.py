@@ -8,4 +8,4 @@ using gene expression data.
 """
 
 __version__ = "1.0.0"
-__author__ = "Musab 0988932"
+__author__ = "Hogeschool Rotterdam Team"

@@ -6,47 +6,47 @@
 
 ## Project Overview
 
-This project implements a comprehensive, production-ready machine learning pipeline for **Glioblastoma (GBM) classification** using gene expression data. Developed for the **Minor AI in Healthcare** at Hogeschool Rotterdam (Capstone Project - Retake), this work demonstrates best practices in:
+This project implements a comprehensive machine learning pipeline for Glioblastoma (GBM) classification using gene expression data. Developed for the Minor AI in Healthcare at Hogeschool Rotterdam (Capstone Project - Retake), this work demonstrates best practices in:
 
-- **Leak-free preprocessing** with proper fit/transform separation
-- **Nested cross-validation (3×3 or 5×3)** for unbiased performance estimation  
-- **Multiple feature selection strategies** (filter+L1, PCA)
-- **Model comparison** (Logistic Regression, Random Forest, LightGBM)
-- **Comprehensive evaluation** (ROC-AUC, PR-AUC, calibration, decision curves)
-- **Feature stability analysis** via bootstrap resampling
-- **Compact gene panel** development for clinical deployment
-- **Ethical AI documentation** (data cards, model cards)
-- **Full reproducibility** via configuration management and random seed control
+- Leak-free preprocessing with proper fit/transform separation
+- Nested cross-validation (3x3 or 5x3) for unbiased performance estimation  
+- Multiple feature selection strategies (filter+L1, PCA)
+- Model comparison (Logistic Regression, Random Forest, LightGBM)
+- Comprehensive evaluation (ROC-AUC, PR-AUC, calibration, decision curves)
+- Feature stability analysis via bootstrap resampling
+- Compact gene panel development for clinical deployment
+- Ethical AI documentation (data cards, model cards)
+- Full reproducibility via configuration management and random seed control
 
 **Research Protocol:** See `docs/Protocol.md` for complete academic documentation  
 **Training Status:** See `TRAINING_STATUS.md` for current progress and results  
-**⭐ NEW:** See `FEASIBILITY_SOLUTION.md` for computationally feasible academic configuration
+**Configuration Guide:** See `CONFIGURATION_GUIDE.md` for details on all available configurations
 
 ---
 
-## ⚡ Which Configuration to Use?
+## Configuration Selection
 
-**→ See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for detailed guide on all 8 configs**
+See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for detailed guide on all available configurations.
 
-**TL;DR:**
-- **First time?** Use `config_smoke_test.yaml` (5-10 min, validates setup)
-- **Main training?** Use `config_ultrafast_pca.yaml` ⭐ (10-15 min, recommended)
-- **Full academic?** Use `config_academic_feasible.yaml` (30-45 min, all requirements)
+**Quick Reference:**
+- **First time:** `config_smoke_test.yaml` (5-10 min, validates setup)
+- **Recommended:** `config_ultrafast_pca.yaml` (10-15 min, fast PCA-based training)
+- **Full academic:** `config_academic_feasible.yaml` (30-45 min, complete protocol)
 
 ---
 
-## ⚡ Computationally Feasible Configuration (NEW)
+## Computationally Feasible Configuration
 
-**Problem:** Original 5×3 nested CV training takes 2-3 hours and cannot be completed by team members.
+**Problem:** Original 5x3 nested CV training requires 2-3 hours, limiting team accessibility.
 
 **Solution:** `config_academic_feasible.yaml` - A protocol-compliant configuration that:
-- ✅ Maintains **full academic rigor** (nested CV, both feature routes, all metrics)
-- ✅ Runs in **30-45 minutes** instead of 2-3 hours
-- ✅ Documented in **Protocol v1.3** with literature support
-- ✅ Includes all **5 academic enhancements**
+- Maintains full academic rigor (nested CV, both feature routes, all metrics)
+- Runs in 30-45 minutes instead of 2-3 hours
+- Documented in Protocol v1.3 with literature support
+- Includes all 5 academic enhancements
 
 **Key Changes:**
-- 3×3 nested CV (academically valid per Bradshaw et al. 2023)
+- 3x3 nested CV (academically valid per Bradshaw et al. 2023)
 - 100 features instead of 200 (core genes preserved)
 - Focused hyperparameter grids (6 LR combos, 12 RF combos)
 - LightGBM disabled (Random Forest covers tree-based models)
@@ -239,12 +239,12 @@ tail -f logs/training_*.log
 ```
 
 **What this does:**
-- Nested CV: 3 outer × 3 inner folds (fast & academically valid)
+- Nested CV: 3 outer x 3 inner folds (fast and academically valid)
 - Feature route: PCA (100 components)
 - Models: Logistic Regression + Random Forest
 - Evaluation: ROC-AUC, PR-AUC, calibration, decision curves, bootstrap CI
-- Runtime: ~10-15 minutes
-- **Memory:** ~12-15 GB peak
+- Runtime: approximately 10-15 minutes
+- Memory: approximately 12-15 GB peak
 
 **Alternative: Filter_L1 Experimental (25-35 minutes):**
 ```bash
@@ -350,27 +350,27 @@ evaluation:
 - `figures/shap/`: Feature importance for compact gene panel
 
 #### Tables
-- `reports/tables/nested_cv_results.csv` — All fold-level metrics for all models
-- `reports/tables/summary_metrics.csv` — Mean ± SD across folds (human-readable)
-- `reports/tables/summary_metrics.tex` — LaTeX table for publications
-- `reports/tables/metrics_ci_*.csv` — Metrics with bootstrap 95% CI
-- `reports/tables/stability_panel.csv` — Top stable genes with selection frequencies
-- `reports/tables/data_quality_report.csv` — Data preprocessing statistics
+- `reports/tables/nested_cv_results.csv` - All fold-level metrics for all models
+- `reports/tables/summary_metrics.csv` - Mean ± SD across folds (human-readable)
+- `reports/tables/summary_metrics.tex` - LaTeX table for publications
+- `reports/tables/metrics_ci_*.csv` - Metrics with bootstrap 95% CI
+- `reports/tables/stability_panel.csv` - Top stable genes with selection frequencies
+- `reports/tables/data_quality_report.csv` - Data preprocessing statistics
 
 #### Models
-- `models/final_model_{feature}_{model}.pkl` — Trained sklearn pipelines with metadata
-- `models/final_model_compact_panel.pkl` — Clinical-grade model (top-30 genes)
+- `models/final_model_{feature}_{model}.pkl` - Trained sklearn pipelines with metadata
+- `models/final_model_compact_panel.pkl` - Clinical-grade model (top-30 genes)
 
 #### Documentation
-- `metadata/model_card_generated.md` — Auto-generated model card
-- `metadata/data_card.md` — Dataset documentation
-- `docs/Protocol.md` — Complete research protocol
+- `metadata/model_card_generated.md` - Auto-generated model card
+- `metadata/data_card.md` - Dataset documentation
+- `docs/Protocol.md` - Complete research protocol
 
 ---
 
 ## Methodology Details
 
-### Nested Cross-Validation (5×3)
+### Nested Cross-Validation (5x3)
 
 ```
 Outer Loop (5 folds, stratified):           Performance Estimation
@@ -384,14 +384,14 @@ Test Fold Evaluation (unseen data)
 ```
 
 **Critical Design:**
-- **No data leakage:** All preprocessing fitted **only** on training folds
-- **Unbiased estimates:** Outer loop provides honest performance metrics
-- **Reproducible:** Fixed random seed (42) throughout all operations
-- **Stratified:** Preserves 93.3% healthy / 6.7% GBM ratio in all folds
+- No data leakage: All preprocessing fitted only on training folds
+- Unbiased estimates: Outer loop provides honest performance metrics
+- Reproducible: Fixed random seed (42) throughout all operations
+- Stratified: Preserves 93.3% healthy / 6.7% GBM ratio in all folds
 
 **Computational Cost:**
-- Per model: 5 outer × 3 inner × N_hyperparams ≈ 15-45 fits
-- Total (all configs): ~90 model trainings
+- Per model: 5 outer x 3 inner x N_hyperparams = approximately 15-45 fits
+- Total (all configs): approximately 90 model trainings
 - Runtime: 2-3 hours on M4 Pro (48GB RAM)
 
 ### Feature Selection Routes
@@ -542,6 +542,6 @@ For questions about this project:
 
 ---
 
-**Last Updated:** November 5, 2025  
-**Version:** 1.0  
+**Last Updated:** November 12, 2025  
+**Version:** 1.1  
 **Status:** Ready for Evaluation

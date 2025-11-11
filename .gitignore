@@ -1,46 +1,104 @@
-# Ignore Python cache and virtual environments
+# Python
 __pycache__/
 *.py[cod]
 *.so
+*.egg
 *.egg-info/
+dist/
+build/
+*.whl
 
-# Ignore Jupyter notebook checkpoints
+# Jupyter Notebook
 .ipynb_checkpoints/
+*.ipynb_checkpoints
 
-# Ignore alle data files (inclusief raw en processed), behalve .gitkeep
+# Virtual Environments
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Data Files (keep .gitkeep only)
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
 
-# Ignore logs and training output
+# Models
+models/*.pkl
+models/*.h5
+models/*.pt
+models/*.pth
+models/*.ckpt
+
+# Logs and Outputs
 logs/
-logs/*.log
-logs/*.err
+*.log
+*.err
+nohup.out
 training_*.log
 training_*.err
-nohup.out
-
-# Ignore environment and OS files
-env/
-.venv/
-.DS_Store
 .training_pid
 
-# Ignore VSCode settings
-.vscode/
-
-# Ignore generated model files (large pickle files)
-models/*.pkl
-
-# Ignore large figure files (optional - keep if tracking is important)
-figures/
-
-# Ignore reports that are auto-generated
+# Generated Reports
 reports/tables/*.csv
 reports/tables/*.tex
 reports/html/
+outputs/
 
-# Ignore old/archived documentation
+# Analysis reports (generated artifacts - keep local)
+reports/ACADEMIC_ANALYSIS.md
+reports/BOOTSTRAP_ANALYSIS.md
+reports/COMPACT_FULL_REPORT.md
+reports/EXECUTIVE_SUMMARY_NL.md
+reports/FEATURE_ANALYSIS.md
+reports/PERMUTATION_TEST_ANALYSIS.md
+reports/SHAP_ANALYSIS.md
+reports/SHAP_VS_GINI_COMPARISON.md
+reports/VALIDATION_SUMMARY_NL.md
+reports/Final_Report_GBM.md
+
+# Analysis scripts (ad-hoc local tools)
+scripts/bootstrap_ci.py
+scripts/extract_features.py
+scripts/generate_compact_full_report.py
+scripts/run_permutation_test.py
+scripts/shap_analysis.py
+scripts/shap_compact_panel.py
+scripts/shap_compact_panel_v2.py
+scripts/shap_report.py
+scripts/stability_analysis.py
+scripts/stability_analysis_v2.py
+scripts/enhanced_train_cv.py
+
+# Figures (auto-generated)
+figures/
+
+# Archived/Old Documentation
 docs_old/
+
+# Temporary Files
+*.tmp
+*.temp
+.cache/
 

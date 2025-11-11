@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-This protocol defines a leakage-safe, reproducible machine learning pipeline for classifying glioblastoma (GBM) versus healthy controls using gene expression data. We employ nested cross-validation (5×3), two dimensionality-reduction routes (L1-filtering vs. PCA), and three model families (Logistic Regression with Elastic Net, Random Forest, LightGBM). Evaluation covers discrimination (ROC-AUC, Average Precision), calibration (intercept, slope, Brier), clinical utility (Decision Curve Analysis), and uncertainty (bootstrap CIs). All design choices are grounded in peer-reviewed sources.
+This protocol defines a leakage-safe, reproducible machine learning pipeline for classifying glioblastoma (GBM) versus healthy controls using gene expression data. We employ nested cross-validation (standard: 5×3; feasible submission variant: 3×3), two dimensionality-reduction routes (L1-filtering vs. PCA), and model families including Logistic Regression with Elastic Net and Random Forest (LightGBM available in code, optionally runnable). Evaluation covers discrimination (ROC-AUC, Average Precision), calibration (intercept, slope, Brier), clinical utility (Decision Curve Analysis), and uncertainty (bootstrap CIs). All design choices are grounded in peer-reviewed sources.
 
 **Objectives:**
 - Build interpretable, reproducible models for GBM classification on high-dimensional gene data
@@ -67,15 +67,15 @@ Glioblastoma (GBM) is the most common malignant primary brain tumor in adults wi
 
 ### 3.2 Class Imbalance
 
-**Class Distribution:** GBM ≈7% (1,253 samples), Healthy ≈93% (17,382 samples)
+**Class Distribution (this submission):** Healthy (negative) ≈6.8% (1,253 samples), GBM (positive) ≈93.2% (17,382 samples)
 
-This 14:1 imbalance is addressed through:
+This strong imbalance is addressed through:
 - Stratified cross-validation to preserve class ratios in all folds
 - Class-weighted loss functions in Random Forest and LightGBM
 - Precision-Recall metrics (Average Precision) alongside ROC-AUC
 - Decision curve analysis to evaluate clinical utility
 
-**Justification:** Stratified sampling ensures representative class proportions, preventing models from learning spurious patterns due to imbalance (Bradshaw & Obuchowski, 2023).
+**Justification:** Stratified sampling ensures representative class proportions, preventing models from learning spurious patterns due to imbalance (Bradshaw & Obuchowski, 2023). Note that the prevalence in this combined dataset is high for GBM due to curation choices; thresholds and decision-curve interpretation are adapted accordingly.
 
 ### 3.3 Data Quality, Harmonization, and Batch Effects
 
@@ -105,12 +105,12 @@ Complete dataset characteristics documented in `metadata/data_card.md` including
 - **Global Random Seed:** 42 (fixed for reproducibility)
 - **Stratification:** Maintains 93%/7% class ratio in all folds
 
-**Feasibility Configuration (`config_academic_feasible.yaml`):**
+**Feasibility Configuration (`config_academic_feasible.yaml` / `config_ultrafast_pca.yaml` used in this submission):**
 - **Outer Loop:** 3 folds (stratified) → computationally feasible variant
 - **Inner Loop:** 3 folds (stratified) → hyperparameter optimization
 - **Global Random Seed:** 42 (fixed for reproducibility)
 - **Stratification:** Maintains 93%/7% class ratio in all folds
-- **Justification:** 3-5 outer folds provide sufficient performance estimation (Bradshaw et al., 2023); 3×3 nested CV maintains academic rigor while enabling completion within retake timeline
+- **Justification:** 3-5 outer folds provide sufficient performance estimation (Bradshaw et al., 2023); 3×3 nested CV maintains academic rigor while enabling completion within retake timeline. The current submission uses 3×3 nested CV for reproducible runtime on available hardware.
 
 **Primary Performance Estimate:** Mean across outer folds (5 or 3 depending on configuration)
 
@@ -187,6 +187,8 @@ pipeline = Pipeline([
 
 **Output:** k genes with interpretable biological meaning
 
+**Submission note:** Due to computational feasibility, this submission primarily reports the PCA route; the Filter_L1 route is fully implemented and can be executed with `config_fast_filter_l1.yaml` or `config_academic_feasible.yaml` for interpretability comparisons.
+
 **Advantages:**
 - Biologically interpretable (real genes, not linear combinations)
 - Enables downstream pathway enrichment analysis
@@ -198,9 +200,9 @@ pipeline = Pipeline([
 
 **Objective:** Capture maximum variance in unsupervised manner.
 
-**Configuration:**
-- **Number of Components (m):** Tuned via inner CV, m ∈ {50, 100, 200}
-- **Expected Variance Explained:** ≥80% (empirically validated)
+**Configuration (used in this submission):**
+- **Number of Components (m):** Fixed to 100 in `config_ultrafast_pca.yaml` for runtime feasibility
+- **Expected Variance Explained:** ~38–40% in this dataset (empirically observed)
 - **Method:** Singular Value Decomposition (SVD)
 - **Centering:** Applied (zero-mean features)
   We **log the cumulative explained variance per fold** and require **≥80%** as a heuristic target for m∈{50,100,200}.
@@ -423,7 +425,7 @@ Where:
 - Aggregate curves across outer folds
 - Report probability of positive net benefit per threshold
 
-**Threshold range.** Given prevalence ≈7%, we emphasise thresholds **t ∈ [0.03, 0.20]** as clinically plausible, alongside the full [0,1] curve. Curves are aggregated across outer folds with bootstrap CIs; we highlight ranges where model net benefit exceeds both “treat none” and “treat all”.
+**Threshold range.** Given the high GBM prevalence in this dataset (≈93%), clinically meaningful thresholds are typically higher; we therefore emphasise **t ∈ [0.70, 0.95]** for triage/confirmatory use cases, alongside the full [0,1] curve. Curves are aggregated across outer folds with bootstrap CIs; we highlight ranges where model net benefit exceeds both “treat none” and “treat all”.
 
 **Interpretation:**
 - Net benefit > 0 and higher than alternatives → clinically useful

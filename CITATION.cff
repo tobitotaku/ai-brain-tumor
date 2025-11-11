@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+type: software
+title: "GBM Classification from Gene Expression: A Machine Learning Pipeline"
+version: 1.1.0
+date-released: 2025-11-12
+url: "https://github.com/tobitotaku/ai-brain-tumor"
+repository-code: "https://github.com/tobitotaku/ai-brain-tumor"
+license: MIT
+authors:
+  - name: "Hogeschool Rotterdam - Minor AI in Healthcare Team"
+    affiliation: "Hogeschool Rotterdam"
+keywords:
+  - glioblastoma
+  - machine learning
+  - gene expression
+  - nested cross-validation
+  - feature selection
+  - cancer classification
+  - bioinformatics
+  - healthcare AI
+abstract: >
+  A comprehensive machine learning pipeline for Glioblastoma (GBM) 
+  classification using gene expression data. This project demonstrates
+  best practices in leak-free preprocessing, nested cross-validation,
+  multiple feature selection strategies, and comprehensive model evaluation.
+  Developed as part of the Minor AI in Healthcare at Hogeschool Rotterdam.
+references:
+  - type: software
+    title: "scikit-learn: Machine Learning in Python"
+    authors:
+      - family-names: "Pedregosa"
+        given-names: "F."
+    year: 2011
+    url: "https://scikit-learn.org/"
+  - type: software
+    title: "SHAP: A Unified Approach to Interpreting Model Predictions"
+    authors:
+      - family-names: "Lundberg"
+        given-names: "Scott M."
+    year: 2017
+    url: "https://github.com/slundberg/shap"
+preferred-citation:
+  type: software
+  title: "GBM Classification from Gene Expression: A Machine Learning Pipeline"
+  authors:
+    - name: "Hogeschool Rotterdam - Minor AI in Healthcare Team"
+  year: 2025
+  url: "https://github.com/tobitotaku/ai-brain-tumor"
+  version: 1.1.0

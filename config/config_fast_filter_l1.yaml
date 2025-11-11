@@ -21,14 +21,14 @@ preprocessing:
   scaler: "standard"
   remove_low_variance: true
   variance_threshold: 0.01
-  correlation_threshold: 0.95
+  correlation_threshold: 0.97  # Increased from 0.95 (fewer correlation pruning ops)
 
-# CRITICAL OPTIMIZATION: Reduced k_prefilter
+# CRITICAL OPTIMIZATION: Reduced k_prefilter + k_best
 features:
   routes:
     - "filter_l1_optimized"
-  k_best: 150  # Reduced from 200
-  k_prefilter: 500  # CRITICAL: Reduced from 2000 (90% reduction in correlation computation)
+  k_best: 100  # Reduced from 200 (fewer L1 features to select)
+  k_prefilter: 500  # CRITICAL: Reduced from 2000 (80% reduction in correlation computation)
   l1_C: 1.0
   pca_components: 100
   stability_selection:

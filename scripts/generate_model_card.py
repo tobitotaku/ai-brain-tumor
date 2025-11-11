@@ -43,9 +43,14 @@ def load_results(results_dir: Path) -> dict:
 
 def format_metric_with_ci(row: pd.Series) -> str:
     """Format metric with confidence interval."""
-    if pd.isna(row['lower_ci']) or pd.isna(row['upper_ci']):
-        return f"{row['mean']:.3f}"
-    return f"{row['mean']:.3f} (95% CI: {row['lower_ci']:.3f}-{row['upper_ci']:.3f})"
+    # Handle different column name variations
+    mean_val = row.get('mean', row.get('value', 0))
+    ci_lower = row.get('ci_lower', row.get('lower_ci', None))
+    ci_upper = row.get('ci_upper', row.get('upper_ci', None))
+    
+    if pd.isna(ci_lower) or pd.isna(ci_upper):
+        return f"{mean_val:.3f}"
+    return f"{mean_val:.3f} (95% CI: {ci_lower:.3f}-{ci_upper:.3f})"
 
 
 def generate_model_card(
@@ -61,9 +66,20 @@ def generate_model_card(
         config_path: Path to config.yaml
         output_path: Path to save model card
     """
-    # Load config
-    with open(config_path) as f:
-        config = yaml.safe_load(f)
+    # Load config if available
+    config = {}
+    try:
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+    except FileNotFoundError:
+        logger.warning(f"Config file not found: {config_path}, using defaults")
+        config = {
+            'project_name': 'GBM Classification',
+            'features': {'routes': ['filter_l1', 'pca']},
+            'models': ['random_forest', 'lr_elasticnet'],
+            'cv': {'outer_folds': 3, 'inner_folds': 2, 'test_size': 0.2},
+            'preprocessing': {'batch_correction': 'combat', 'scaler': 'standard'}
+        }
     
     # Start building card
     card = []
@@ -75,7 +91,7 @@ def generate_model_card(
     # Model Details
     card.append("## Model Details\n\n")
     card.append(f"**Project:** {config.get('project_name', 'GBM Classification')}\n")
-    card.append(f"**Developer:** Musab (0988932)\n")
+    card.append(f"**Developer:** Hogeschool Rotterdam Team\n")
     card.append(f"**Institution:** Hogeschool Rotterdam - Minor AI in Healthcare\n")
     card.append(f"**Date:** {datetime.now().strftime('%B %Y')}\n")
     
@@ -248,8 +264,8 @@ def generate_model_card(
     # Citation
     card.append("## Citation\n\n")
     card.append("```\n")
-    card.append("@misc{musab2025gbm,\n")
-    card.append("  author = {Musab (0988932)},\n")
+    card.append("@misc{2025gbm,\n")
+    card.append("  author = {Hogeschool Rotterdam Team},\n")
     card.append("  title = {GBM Classification Pipeline: Gene Expression Analysis},\n")
     card.append("  year = {2025},\n")
     card.append("  institution = {Hogeschool Rotterdam},\n")
@@ -268,7 +284,22 @@ def generate_model_card(
 def main():
     """Main execution function."""
     results_dir = Path("reports/tables")
-    config_path = Path("config.yaml")
+    # Try to find the most recent config file
+    config_candidates = [
+        Path("config_ultrafast_pca.yaml"),
+        Path("config_academic_feasible.yaml"),
+        Path("config.yaml")
+    ]
+    config_path = None
+    for candidate in config_candidates:
+        if candidate.exists():
+            config_path = candidate
+            break
+    
+    if config_path is None:
+        logger.warning("No config file found, using default values")
+        config_path = Path("config.yaml")  # Will handle missing file gracefully
+    
     output_path = Path("metadata/model_card_generated.md")
     
     logger.info("Loading training results...")
