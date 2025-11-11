@@ -228,7 +228,7 @@ To verify that perfect performance reflects genuine biological signal (not data 
 **Interpretation:**  
 We ran 20 label permutations; none matched the true AUC. The empirical p-value is p = 1/(20+1) = 0.0476. Larger permutation counts (e.g., 1,000 iterations) would further tighten this estimate and provide more precise p-values. The observed performance is statistically significant and cannot be attributed to data leakage. The model learns genuine discriminative patterns from gene expression.
 
-![Permutation Test Distribution](../figures/modeling/permutation_distribution.png)
+![Permutation Test Distribution](../figures/modeling/permutation_20251111_204210.png)
 
 ### 3.4 Calibration Analysis
 
@@ -248,7 +248,7 @@ Near-zero Brier scores and ideal intercept/slope reflect saturated probabilities
 **Calibration Curves:**  
 Reliability diagrams (Figure 1) demonstrate that predicted probabilities closely align with observed frequencies across all probability bins.
 
-![Calibration Curves](../figures/calibration/calibration_curves_filter_l1_random_forest.png)
+![Calibration Curves](../figures/calibration/calibration_curves.png)
 
 *Figure 1. Calibration curves for filter-L1 + random forest model. Diagonal line represents perfect calibration; shaded region shows 95% confidence band. Brier score = 0.000017 indicates near-saturated probabilities.*
 
@@ -257,14 +257,14 @@ Reliability diagrams (Figure 1) demonstrate that predicted probabilities closely
 **ROC Analysis:**  
 Figure 2 displays ROC curves for all model combinations. The filter-L1 + random forest curve hugs the top-left corner (AUC = 1.000), indicating perfect separation.
 
-![ROC Curves](../figures/modeling/roc_curves_comparison.png)
+![ROC Curves](../figures/modeling/roc_curves.png)
 
 *Figure 2. Receiver operating characteristic (ROC) curves for four model × feature-route combinations. Dashed line represents random classifier (AUC = 0.50).*
 
 **Precision-Recall Analysis:**  
 Given severe class imbalance (93.3% positive GBM, 6.7% negative healthy), PR-AUC is more informative than ROC-AUC. Figure 3 shows PR curves with **baseline = 0.067** (minority healthy class prevalence).
 
-![PR Curves](../figures/modeling/pr_curves_comparison.png)
+![PR Curves](../figures/modeling/pr_curves.png)
 
 *Figure 3. Precision-recall (PR) curves. Horizontal dashed line represents random baseline (PR-AUC = 0.067, minority class prevalence). Both random forest models achieve PR-AUC ≥ 0.9996.*
 
@@ -294,7 +294,7 @@ Actual Positive (GBM)                 0               17,382
 - **PPV = 1.000:** All positive predictions are true GBM
 - **NPV = 1.000:** All negative predictions are true healthy
 
-![Confusion Matrix](../figures/modeling/confusion_matrix_filter_l1_random_forest.png)
+![Confusion Matrix](../figures/modeling/confusion_matrix_best.png)
 
 *Figure 4. Confusion matrix for filter-L1 + random forest model. Perfect classification with zero errors.*
 
@@ -315,7 +315,7 @@ We emphasize clinically relevant thresholds **t ∈ [0.03, 0.20]** (realistic fo
 **Results:**  
 The filter-L1 + random forest model dominates both "treat all" and "treat none" strategies across all thresholds, confirming clinical decision-making value. Peak net benefit occurs in the [0.03–0.20] range.
 
-![Decision Curve](../figures/modeling/decision_curve_filter_l1_random_forest.png)
+![Decision Curve](../figures/calibration/decision_curve_best.png)
 
 *Figure 5. Decision curve analysis. Model net benefit (solid line) exceeds "treat all" (dashed) and "treat none" (horizontal) strategies. Shaded region [0.03–0.20] highlights clinically relevant threshold band.*
 
@@ -406,16 +406,16 @@ Spearman correlation between SHAP and Gini rankings: ρ = -0.21 (p = 0.02)
 **Individual Prediction Examples:**  
 Waterfall plots (Figure 9) illustrate how individual genes contribute to specific predictions, enabling case-level explainability.
 
-![SHAP Waterfall](../figures/shap/shap_waterfall_sample_0.png)
+![SHAP Waterfall](../figures/shap/shap_waterfall_sample_1.png)
 
 *Figure 9. SHAP waterfall plot for a representative GBM sample. Each bar shows a gene's contribution to pushing the prediction from base value (prior probability) to final output.*
 
 **Feature Interactions:**  
 Dependence plots (Figure 10) reveal interactions between top genes and secondary features, highlighting synergistic effects.
 
-![SHAP Dependence](../figures/shap/shap_dependence_ENSG00000230377.1.png)
+![SHAP Dependence](../figures/shap/shap_dependence_top6.png)
 
-*Figure 10. SHAP dependence plot for top gene ENSG00000230377.1. Scatter shows how SHAP value varies with gene expression; color indicates interaction effects with another feature.*
+*Figure 10. SHAP dependence plot for top genes. Scatter shows how SHAP values vary with gene expression; color indicates interaction effects with other features.*
 
 ### 4.4 Compact Gene Panel (30 Genes)
 
