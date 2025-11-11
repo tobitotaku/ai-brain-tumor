@@ -293,16 +293,17 @@ def main(config_path: str):
     logger.info(f"Saved detailed results to {results_file}")
     
     # Display top models
-    logger.info("\nTop 5 Models by ROC-AUC:")
-    logger.info(results_df[['pipeline_name', 'roc_auc', 'f1', 'accuracy']].head().to_string(index=False))
+    n_top = min(5, len(results_df))
+    logger.info(f"\nTop {n_top} Models by ROC-AUC:")
+    logger.info(results_df[['pipeline_name', 'roc_auc', 'f1', 'accuracy']].head(n_top).to_string(index=False))
     
     # Step 4: Create visualizations
     logger.info("\n" + "=" * 60)
     logger.info("STEP 4: Creating visualizations")
     logger.info("=" * 60)
     
-    # Prepare data for plotting (use top 5 models)
-    top_models = results_df.head(5)['pipeline_name'].tolist()
+    # Prepare data for plotting (use top 5 models or fewer if not available)
+    top_models = results_df.head(min(5, len(results_df)))['pipeline_name'].tolist()
     y_prob_dict = {name: all_predictions[name]['y_prob'] for name in top_models}
     y_true_plot = all_predictions[top_models[0]]['y_true']
     
@@ -342,11 +343,13 @@ def main(config_path: str):
     logger.info("Created confusion matrix")
     
     # Calibration curves
+    n_models_calib = len(y_prob_dict)
+    title_calib = f'Calibration Curves - Top {n_models_calib} Models' if n_models_calib > 1 else 'Calibration Curves'
     plot_calibration_curve(
         y_true_plot,
         y_prob_dict,
         n_bins=10,
-        title='Calibration Curves - Top 5 Models',
+        title=title_calib,
         save_path=figures_dir / 'calibration' / 'calibration_curves.png'
     )
     logger.info("Created calibration curves")
