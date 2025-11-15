@@ -6,3 +6,4 @@ jupyter
 pycombat
 umap
 seaborn
+imbalanced-learn
