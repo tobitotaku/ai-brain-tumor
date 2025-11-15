@@ -63,7 +63,6 @@ training_*.err
 # Generated Reports
 reports/tables/*.csv
 reports/tables/*.tex
-reports/html/
 outputs/
 
 # Analysis reports (generated artifacts - keep local)
