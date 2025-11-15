@@ -20,3 +20,5 @@ env/
 
 # Ignore VSCode settings
 .vscode/
+
+docs/
