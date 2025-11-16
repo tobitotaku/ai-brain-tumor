@@ -1,24 +1,30 @@
 # GBM Classification from Gene Expression
 
-## 🔬 Project Overview
+## Project Overview
 
-This project builds a machine learning pipeline to classify Glioblastoma Multiforme (GBM) tumor samples versus normal brain tissue using gene expression data.
+This project develops a machine learning pipeline to classify Glioblastoma Multiforme (GBM) tumor samples versus normal brain tissue using gene expression data.
 
-## 🧬 Data Sources
+## Data Sources
 
-- **Normal samples**: GTEx TPM matrix (`gene_tpm_v10_brain_cerebellum.gct`), plaats in `data/raw/`
-- **Tumor samples**: TCGA-GBM van Genomic Data Commons (GDC), download en plaats in `data/raw/`
+All data is sourced from the UCSC Xena platform:
+- Main website: https://xena.ucsc.edu/
+- Cohort used: TCGA TARGET GTEx (https://xenabrowser.net/datapages/?cohort=TCGA%20TARGET%20GTEx)
 
-## 📁 Project Structure
+The dataset includes:
+- Normal brain tissue samples from GTEx
+- Glioblastoma tumor samples from TCGA-GBM
+- Lower-grade glioma samples from TCGA-LGG
+
+## Project Structure
 
 ```
 data/
   raw/              # Original data files
   processed/        # Cleaned, normalized data
-*.ipynb             # script files
+*.ipynb             # Analysis notebooks
 ```
 
-## 🧠 Authors
+## Authors
 
 - Musab Sivrikaya
 - Jim Tronchet
